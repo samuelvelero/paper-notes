@@ -185,18 +185,21 @@ dependencias, modo stdio y modo HTTP tras `/mcp/<MCP_PATH_TOKEN>`.
 
 | Herramienta | Entrada | Salida |
 |---|---|---|
-| `notas_buscar` | `q`, `limite` (10), `carpeta`, `etiqueta`, `incluir_papelera` | lista rankeada: `id`, `titulo`, `carpeta`, `fragmento`, `puntaje`, `actualizada`. Llama al buscador (híbrido) |
+| `notas_buscar` | `q`, `limite` (10), `carpeta`, `etiqueta`, `incluir_papelera`, `solo_lexico` | lista rankeada: `id`, `titulo`, `carpeta`, `fragmento`, `puntaje`, `actualizada`. Llama al buscador (híbrido) |
 | `nota_leer` | `id` o `titulo` | nota completa en Markdown + metadatos |
-| `nota_crear` | `contenido` (markdown), `carpeta`, `fijada` | nota creada |
+| `nota_crear` | `contenido` (markdown), `titulo`?, `carpeta`, `crear_carpeta`?, `fijada` | nota creada |
 | `nota_agregar` | `id`, `contenido`, `donde` (`final` / `inicio`) | nota actualizada |
-| `nota_actualizar` | `id`, `contenido`? , `carpeta`?, `fijada`?, `papelera`? | nota actualizada |
-| `notas_recientes` | `limite`, `carpeta` | últimas editadas |
+| `nota_actualizar` | `id`, `contenido`?, `carpeta`? (`"ninguna"` = raíz), `crear_carpeta`?, `fijada`?, `papelera`? | nota actualizada |
+| `notas_recientes` | `limite`, `carpeta`, `etiqueta`, `fijadas_primero`, `incluir_papelera` | últimas editadas con extracto |
 | `carpetas_listar` | — | árbol de carpetas con conteos + etiquetas en uso |
 
 Reglas: `nota_actualizar` con `contenido` reemplaza el cuerpo entero y pasa
 por el mismo control de `version` (el MCP siempre lee antes de escribir).
-Nada se borra: `papelera: true` es lo máximo. Tests en `tests/mcp.test.js`
-como en tareas. Conector remoto en Claude igual que `tareas`.
+Nada se borra: `papelera: true` es lo máximo. Una carpeta debe existir
+(`crear_carpeta: true` para crearla a propósito, como las secciones en
+tareas). Si el buscador no responde, `notas_buscar` cae a `title ~ / plain ~`
+de PocketBase y lo avisa. Tests en `tests/mcp.test.js` (puros) y
+`tests/mcp-smoke.mjs` (en vivo). Conector remoto en Claude igual que `tareas`.
 
 ---
 
