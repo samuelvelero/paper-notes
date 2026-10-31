@@ -74,9 +74,19 @@
 	# Las rutas internas del buscador (las llama el hook por la red interna)
 	# van con token, pero desde internet ni se ven.
 	@buscador_interno path /search/index /search/reindex
-	respond @admin 404
-	respond @signup 403
-	respond @buscador_interno 404
+	# Como `handle`, no como `respond` suelto: Caddy ordena los `handle` antes
+	# que los `respond`, y el `handle /search*` del snippet se quedaría con
+	# /search/index antes de que el bloqueo lo viera. Los `handle` se evalúan
+	# en el orden en que aparecen y estos van antes del import.
+	handle @admin {
+		respond 404
+	}
+	handle @signup {
+		respond 403
+	}
+	handle @buscador_interno {
+		respond 404
+	}
 
 	import notes
 }
