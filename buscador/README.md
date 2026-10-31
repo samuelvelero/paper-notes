@@ -58,6 +58,11 @@ ese usuario.
 trigramas (no hay palabra exacta que marcar); entonces `fragment` es el
 inicio del texto. La UI de resaltado está apagada en v1: el dato ya viene.
 
+Latencia medida en el servidor de casa (Celeron N3350, 2 núcleos): léxico
+(`semantic=0`) 8–14 ms; con semántica 130–310 ms, casi todo en embeber la
+consulta. Para búsqueda mientras se escribe, usa `semantic=0` (o el índice
+local del cliente) y deja la semántica para la consulta confirmada y el MCP.
+
 ### `GET /search/health`
 
 `{ ok, ready, model, notes, last_sync, error }`. `ready` es `false` mientras
