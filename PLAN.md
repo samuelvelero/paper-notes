@@ -15,7 +15,7 @@ Fecha del plan: 31 oct 2026. Decisiones tomadas en la entrevista del mismo día.
 |---|---|
 | Backend | PocketBase (misma versión que tareas, v0.39.x), SQLite embebido, en `~/samukis-notes` de la laptop Linux |
 | Dominio | `notes.samukis.xyz` por cloudflared (público) + `localhost:8090` por Tailscale |
-| Web | PWA vanilla (HTML/CSS/JS, cero build), responsive escritorio + móvil, lenguaje visual de tareas; ME3 como variante futura |
+| Web | PWA vanilla (HTML/CSS/JS, cero build), responsive escritorio + móvil. **Look de Notas de HyperOS** (`docs/ui-hyperos.md`): sin pestaña de tareas, sin asistente IA en el editor, fondos de nota a futuro. ME3 como variante futura |
 | Android | Nativa Kotlin + Compose, offline-first, DESPUÉS de iterar la web |
 | Usuarios | Solo Samuel, pero multiusuario real desde el día uno (colección `users` + `owner` + API Rules) |
 | Formato | Markdown en la base de datos, editor WYSIWYG que no deja ver Markdown |

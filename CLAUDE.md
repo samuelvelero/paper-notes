@@ -37,6 +37,9 @@ del servidor (ignorado); los datos del despliegue, fuera del repo.
 - **Web** (Fase 3): HTML+CSS+JS vanilla, cero frameworks, cero build, local-first
   (IndexedDB + cola de sync + SSE), como tareas. Editor: ProseMirror vendorizado
   (única librería, en un solo archivo, como morphdom en tareas).
+  **UI: la de Notas de HyperOS**, documentada en `docs/ui-hyperos.md` (tokens,
+  pantallas, barra de edición). Sin pestaña de tareas, sin asistente de IA en
+  el editor; fondos de nota "estilizados" en v2 (`notes.theme`, aún sin campo).
 - **Buscador** (Fase 1): servicio aparte con SQLite propia: FTS5 (trigram +
   unicode61 sin tildes) y vectores (`sqlite-vec`) con un modelo de embeddings
   multilingüe. Ranking híbrido (RRF). Lo alimenta un hook y lo consume el MCP.
