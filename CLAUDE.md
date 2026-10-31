@@ -40,9 +40,16 @@ del servidor (ignorado); los datos del despliegue, fuera del repo.
   **UI: la de Notas de HyperOS**, documentada en `docs/ui-hyperos.md` (tokens,
   pantallas, barra de edición). Sin pestaña de tareas, sin asistente de IA en
   el editor; fondos de nota "estilizados" en v2 (`notes.theme`, aún sin campo).
-- **Buscador** (Fase 1): servicio aparte con SQLite propia: FTS5 (trigram +
-  unicode61 sin tildes) y vectores (`sqlite-vec`) con un modelo de embeddings
-  multilingüe. Ranking híbrido (RRF). Lo alimenta un hook y lo consume el MCP.
+- **Buscador** (`buscador/`, Python, la única pieza con dependencias):
+  SQLite propia en `data/buscador` con `fts_word` (unicode61 sin tildes:
+  prefijos y fragmentos `<mark>`), `fts_tri` (trigramas: errores
+  tipográficos) y `vec` (`sqlite-vec`, un vector por trozo con
+  `jinaai/jina-embeddings-v2-base-es`), fundidos con RRF. Valida el token
+  del usuario contra PocketBase y filtra por `owner`. Lo alimenta el hook
+  `pb_hooks/search.pb.js` (POST `/search/index` con `X-Index-Token`) y un
+  sync periódico de respaldo. Caddy pasa `/search*` sin recortar el prefijo.
+  Contrato completo en `buscador/README.md`. El modelo se cachea en el
+  volumen (`data/buscador/models`); cambiarlo recalcula los vectores.
 - **MCP** (Fase 2): `mcp/server.js`, un archivo, sin dependencias, modo stdio y
   modo HTTP tras `/mcp/<token>`.
 - **Android** (Fase 5): Kotlin + Compose, Room, offline-first. Quick tile,
@@ -105,7 +112,10 @@ PB_URL=http://127.0.0.1:8790 PB_ADMIN_EMAIL=… PB_ADMIN_PASSWORD=… node tests
 
 `api-smoke.mjs` crea dos usuarios ficticios, verifica dueño, derivados,
 versiones, conflicto, aislamiento entre usuarios, carpetas y papelera, y los
-borra. Vale contra el servidor real.
+borra. Vale contra el servidor real. `search-smoke.mjs` hace lo mismo con el
+buscador (prefijos, tildes, errores tipográficos, semántica, filtros,
+aislamiento) y necesita el servicio levantado con Docker: no corre en local
+sin él.
 
 ## Despliegue
 

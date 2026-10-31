@@ -263,7 +263,7 @@ cuando ya hay web para verla.
 
 | Fase | Entregable | Hecho cuando |
 |---|---|---|
-| **0. Cimientos** | Repo `samukis-notes`, `docker-compose.yml` (caddy, pocketbase, cloudflared), colecciones y API Rules, usuario `users` de Samuel, hooks de derivados y de `version`, hostname `notes.samukis.xyz` en Cloudflare | Creas y editas una nota por la API REST desde la PC y desde el celular, con `owner` aislado |
+| **0. Cimientos** ✅ 31 oct 2026 | Repo `samukis-notes`, `docker-compose.yml` (caddy, pocketbase, cloudflared), colecciones y API Rules, usuario `users` de Samuel, hooks de derivados y de `version`, hostname `notes.samukis.xyz` en Cloudflare | Creas y editas una nota por la API REST desde la PC y desde el celular, con `owner` aislado |
 | **1. Buscador** | Contenedor `buscador`: FTS5 trigram + unicode61, embeddings, `sqlite-vec`, RRF, endpoint `/search`, reindexado por hook y completo | "reunon" encuentra "reunión"; "cosas para el viaje" encuentra una nota que dice "equipaje"; respuesta < 100 ms con 5 000 notas de prueba |
 | **2. MCP** | `mcp/server.js` con las 7 herramientas, tests, conector remoto registrado en Claude | Desde Claude móvil: "busca en mis notas lo del router" devuelve la nota sin que el LLM liste nada |
 | **3. PWA v1** | Shell + sidebar (carpetas, fijadas, etiquetas, papelera) + lista + editor ProseMirror + búsqueda local + adjuntos + offline + historial de versiones + ajustes (título automático) | Uso diario en PC y celular dos semanas sin volver a Apple Notes |
