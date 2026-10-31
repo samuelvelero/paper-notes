@@ -232,11 +232,22 @@ class Index:
                     pass
             # 3. semántica
             if semantic and len(fold(q).strip()) >= 3:
-                emb = next(self.model.embed([q.strip()]))
-                rows = self.db.execute(
-                    "SELECT note_id, min(distance) AS d FROM vec WHERE owner = ? AND embedding MATCH ? AND k = ? GROUP BY note_id ORDER BY d",
-                    (owner, sqlite_vec.serialize_float32(emb.tolist()), CANDIDATES)).fetchall()
-                add("vec", [r[0] for r in rows])
+                try:
+                    emb = next(self.model.embed([q.strip()]))
+                    # vec0 solo admite `ORDER BY distance` a secas en una consulta
+                    # KNN (nada de GROUP BY / min): se piden trozos de sobra y se
+                    # agrupa por nota aquí, quedándose con el mejor trozo de cada una.
+                    rows = self.db.execute(
+                        "SELECT note_id, distance FROM vec WHERE owner = ? AND embedding MATCH ? AND k = ? ORDER BY distance",
+                        (owner, sqlite_vec.serialize_float32(emb.tolist()), CANDIDATES * 3)).fetchall()
+                    seen, ordered = set(), []
+                    for nid, _ in rows:
+                        if nid not in seen:
+                            seen.add(nid)
+                            ordered.append(nid)
+                    add("vec", ordered[:CANDIDATES])
+                except Exception as e:   # sin semántica sigue valiendo lo léxico
+                    print("búsqueda vectorial falló:", e, flush=True)
 
             if not ranked:
                 return []
