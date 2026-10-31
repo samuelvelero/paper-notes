@@ -29,6 +29,10 @@ CHUNK_OVERLAP = 120
 RRF_K = 60
 WEIGHTS = {"word": 1.0, "tri": 0.8, "vec": 1.0}
 CANDIDATES = 60          # cuántos pide cada vista antes de fundir
+# KNN devuelve siempre los k más cercanos, aunque estén lejísimos. Por encima
+# de esta distancia coseno un trozo no cuenta. Medido con jina-v2-base-es:
+# aciertos reales 0.33–0.61, ruido ("asdfgh qwerty") de 0.73 en adelante.
+VEC_MAX_DISTANCE = 0.70
 SNIPPET_TOKENS = 20
 
 
@@ -241,7 +245,9 @@ class Index:
                         "SELECT note_id, distance FROM vec WHERE owner = ? AND embedding MATCH ? AND k = ? ORDER BY distance",
                         (owner, sqlite_vec.serialize_float32(emb.tolist()), CANDIDATES * 3)).fetchall()
                     seen, ordered = set(), []
-                    for nid, _ in rows:
+                    for nid, dist in rows:
+                        if dist > VEC_MAX_DISTANCE:
+                            break      # vienen ordenados: lo que sigue está aún más lejos
                         if nid not in seen:
                             seen.add(nid)
                             ordered.append(nid)
