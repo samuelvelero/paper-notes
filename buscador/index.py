@@ -48,6 +48,10 @@ def tokens(q):
     return [t for t in re.findall(r"[^\W_]+", fold(q)) if t]
 
 
+def trigrams(t):
+    return {t[i:i + 3] for i in range(len(t) - 2)} if len(t) >= 3 else set()
+
+
 def chunks(title, plain):
     """Trozos de ~CHUNK_CHARS con solape, cortando en párrafos cuando se puede.
     Cada trozo lleva el título delante: el embedding sabe de qué nota es."""
@@ -220,18 +224,32 @@ class Index:
                 add("word", [r[0] for r in rows])
             except sqlite3.OperationalError:
                 pass
-            # 2. trigramas: cada palabra de ≥3 letras, en OR, y la frase entera
+            # 2. trigramas = tolerancia a errores. `MATCH "reunon"` exigiría la
+            #    cadena entera como subcadena, así que se buscan los trigramas
+            #    SUELTOS de cada palabra (en OR) y se puntúa aquí por la fracción
+            #    de trigramas de cada palabra que aparece en la nota: "reunon"
+            #    comparte reu/eun con "reunion" (2 de 4), "lentejs" 4 de 5 con
+            #    "lentejas". Una palabra cuenta si llega a la mitad.
             tri_terms = [t for t in toks if len(t) >= 3]
-            if tri_terms:
-                tri_q = " OR ".join(f'"{t}"' for t in tri_terms)
-                phrase = fold(q).strip()
-                if len(phrase) >= 3 and len(tri_terms) > 1:
-                    tri_q = f'"{phrase}" OR ' + tri_q
+            grams_by_term = {t: trigrams(t) for t in tri_terms}
+            all_grams = set().union(*grams_by_term.values()) if tri_terms else set()
+            if all_grams:
+                tri_q = " OR ".join(f'"{g}"' for g in sorted(all_grams))
                 try:
                     rows = self.db.execute(
-                        "SELECT id FROM fts_tri WHERE owner = ? AND fts_tri MATCH ? ORDER BY bm25(fts_tri) LIMIT ?",
-                        (owner, tri_q, CANDIDATES)).fetchall()
-                    add("tri", [r[0] for r in rows])
+                        "SELECT id, text FROM fts_tri WHERE owner = ? AND fts_tri MATCH ? LIMIT 400",
+                        (owner, tri_q)).fetchall()
+                    scored = []
+                    for nid, text in rows:
+                        s = 0.0
+                        for t, grams in grams_by_term.items():
+                            ratio = sum(1 for g in grams if g in text) / len(grams)
+                            if ratio >= 0.5:
+                                s += ratio
+                        if s > 0:
+                            scored.append((s, nid))
+                    scored.sort(key=lambda x: -x[0])
+                    add("tri", [nid for _, nid in scored[:CANDIDATES]])
                 except sqlite3.OperationalError:
                     pass
             # 3. semántica

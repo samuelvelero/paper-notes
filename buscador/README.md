@@ -9,8 +9,8 @@ embeddings, así que esto vive aparte y tiene su propia SQLite en `/data`.
 | Vista | Para qué | Cómo |
 |---|---|---|
 | `fts_word` | palabras y prefijos, fragmentos resaltados | FTS5 `unicode61 remove_diacritics 2`, bm25 con el título ×3 |
-| `fts_tri` | subcadenas y errores tipográficos | FTS5 `trigram` sobre texto plegado (minúsculas, sin tildes) |
-| `vec` | semántica ("cosas para el viaje" → "equipaje") | `sqlite-vec`, un vector por trozo de ~700 caracteres con el título delante |
+| `fts_tri` | errores tipográficos | FTS5 `trigram` sobre texto plegado; se buscan los trigramas sueltos de cada palabra y cuenta si coincide al menos la mitad ("reunon" → "reunión") |
+| `vec` | semántica ("cosas para el viaje" → "equipaje") | `sqlite-vec`, un vector por trozo de ~700 caracteres con el título delante; se descarta lo que queda a más de 0.70 de distancia coseno |
 
 Las tres listas se funden con RRF (reciprocal rank fusion). Las notas en la
 papelera se indexan pero no se embeben, y solo salen con `trashed=1`.
