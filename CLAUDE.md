@@ -34,12 +34,26 @@ del servidor (ignorado); los datos del despliegue, fuera del repo.
   `127.0.0.1`, con el panel, el login de superusuario y el registro cerrados).
   La pública la recoge un cloudflared que corre en el host y la publica como
   `notes.samukis.xyz`. Nunca comprimir `text/event-stream` (mata el SSE).
-- **Web** (Fase 3): HTML+CSS+JS vanilla, cero frameworks, cero build, local-first
-  (IndexedDB + cola de sync + SSE), como tareas. Editor: ProseMirror vendorizado
-  (única librería, en un solo archivo, como morphdom en tareas).
+- **Web** (`pb_public/`): HTML+CSS+JS vanilla, cero frameworks, cero build,
+  local-first (IndexedDB + cola de sync + SSE), como tareas. Archivos, en el
+  orden en que se cargan: `morphdom.js` y `prosemirror.js` (vendorizados),
+  `md.js` (derivados), `mdpm.js` (Markdown ↔ documento ProseMirror, con el
+  esquema del dialecto), `icons.js`, `state.js` (arrays, consultas, ajustes),
+  `idb.js`, `toast.js`, `sync.js` (PBC, cola con `base_version`, imágenes,
+  realtime, barra de red), `editor.js` (la única pieza que sabe de
+  ProseMirror: `editorOpen/editorMarkdown/editorSet/editorCmd/editorState`),
+  `render.js` (HTML de cada vista + `paint()` con morph), `actions.js`
+  (handler delegado `data-act`, autoguardado con debounce de 800 ms y
+  guardado inmediato al salir, menús, modales), `boot.js`.
+  Con una nota abierta `paint()` NO repinta `#content` (ahí vive el editor).
+  **ProseMirror** se reconstruye con `scripts/vendor-prosemirror.sh`
+  (esbuild, IIFE global `PM`); es la única vendorización con build.
   **UI: la de Notas de HyperOS**, documentada en `docs/ui-hyperos.md` (tokens,
   pantallas, barra de edición). Sin pestaña de tareas, sin asistente de IA en
   el editor; fondos de nota "estilizados" en v2 (`notes.theme`, aún sin campo).
+  Las `#etiquetas` y los `[[enlaces]]` son texto decorado en el editor, no
+  nodos. Las reglas de entrada convierten `# `, `- `, `1. `, `[] `, `> `,
+  ```` ``` ````, `---`, `**x**`, `~~x~~`, `++x++` y `` `x` `` al teclear.
 - **Buscador** (`buscador/`, Python, la única pieza con dependencias):
   SQLite propia en `data/buscador` con `fts_word` (unicode61 sin tildes:
   prefijos y fragmentos `<mark>`), `fts_tri` (trigramas: errores
@@ -117,6 +131,12 @@ node --test tests/*.test.js
 ```bash
 PB_URL=http://127.0.0.1:8790 PB_ADMIN_EMAIL=… PB_ADMIN_PASSWORD=… node tests/api-smoke.mjs
 ```
+
+`mdpm.test.js` carga el ProseMirror vendorizado en un `vm` y hace el viaje
+Markdown → doc → Markdown con el esquema real. Para probar la web a mano:
+PocketBase local (arriba), un usuario de prueba creado por la API y el
+navegador en `http://127.0.0.1:8790`; el buscador no está ahí (Intro en la
+búsqueda avisa), el resto sí.
 
 `api-smoke.mjs` crea dos usuarios ficticios, verifica dueño, derivados,
 versiones, conflicto, aislamiento entre usuarios, carpetas y papelera, y los

@@ -36,7 +36,10 @@
 
   /* Una línea sin marcas de bloque ni inline. */
   function plainLine(line) {
-    let s = line;
+    /* Un carácter escapado (`\*`, `\#`: los pone el serializador de la web,
+       mdpm.js) es texto literal: se aparta a un código privado para que
+       ninguna regla de abajo lo tome por marca, y se restaura al final. */
+    let s = line.replace(/\\([\\`*_{}\[\]()#+\-.!~>|])/g, function (m, c) { return String.fromCharCode(0xE000 + c.charCodeAt(0)); });
     s = s.replace(/^\s{0,3}#{1,6}\s+/, '');                       // encabezado
     s = s.replace(/^\s*>\s?/, '');                                 // cita
     s = s.replace(/^\s*(?:[-*+]|\d+[.)])\s+\[[ xX]\]\s*/, '');     // to-do
@@ -48,6 +51,7 @@
     s = s.replace(/(\*\*|__|~~|\+\+)(\S(?:[\s\S]*?\S)?)\1/g, '$2'); // negrita, tachado, subrayado
     s = s.replace(/(\*|_)(\S(?:[\s\S]*?\S)?)\1/g, '$2');            // cursiva
     s = s.replace(/`([^`]*)`/g, '$1');                             // código inline
+    s = s.replace(/[-]/g, function (ch) { return String.fromCharCode(ch.charCodeAt(0) - 0xE000); });
     return s;
   }
 
