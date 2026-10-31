@@ -1,0 +1,50 @@
+services:
+  # Caddy va DELANTE de PocketBase por lo mismo que en tareas: comprimir y
+  # mandar Cache-Control (PocketBase no hace ninguna de las dos). Dos entradas:
+  #   :8093 → tailnet / LAN (todo abierto; solo llegan dispositivos tuyos)
+  #   :8094 → pública, solo en 127.0.0.1: la recoge el cloudflared general del
+  #           host (corre en red host) y la publica como notes.samukis.xyz.
+  #           Ahí el admin y el registro de cuentas están cerrados (Caddyfile).
+  caddy:
+    image: caddy:2-alpine
+    container_name: notes-caddy
+    restart: unless-stopped
+    ports:
+      - "8093:8093"
+      - "127.0.0.1:8094:8094"
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      pocketbase:
+        condition: service_healthy
+
+  pocketbase:
+    build: ./pocketbase
+    container_name: notes-pocketbase
+    restart: unless-stopped
+    # Sin `ports`: solo le habla Caddy por la red interna.
+    expose:
+      - "8090"
+    environment:
+      PB_ADMIN_EMAIL: ${PB_ADMIN_EMAIL:?define PB_ADMIN_EMAIL en .env}
+      PB_ADMIN_PASSWORD: ${PB_ADMIN_PASSWORD:?define PB_ADMIN_PASSWORD en .env}
+      TZ: ${TZ:-America/Lima}
+    volumes:
+      - ./data/pb_data:/pb/pb_data          # la base de datos (haz backup de esta carpeta)
+      - ./pb_public:/pb/pb_public:ro        # la PWA: se edita sin reconstruir
+      - ./pb_hooks:/pb/pb_hooks:ro          # rutas y hooks (PocketBase se reinicia solo al cambiar)
+      - ./pb_migrations:/pb/pb_migrations:ro # el esquema, versionado (se aplican al arrancar)
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8090/api/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  # Fase 1: `buscador` (índice FTS5 + vectores). Fase 2: `mcp`. Se añaden aquí
+  # cuando toquen; Caddy ya reserva sus rutas (/search/*, /mcp/*).
+
+volumes:
+  caddy_data:
+  caddy_config:

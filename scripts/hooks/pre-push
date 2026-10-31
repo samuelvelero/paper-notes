@@ -1,0 +1,33 @@
+#!/bin/sh
+# ══════════════ Red de seguridad antes de desplegar ══════════════
+# `git push casa main` despliega en el acto (post-receive hace reset --hard en
+# el working tree del servidor). Un SyntaxError en un hook o migración deja
+# PocketBase sin arrancar. Se instala una vez:  git config core.hooksPath scripts/hooks
+# Saltárselo a conciencia: git push --no-verify
+set -eu
+ROOT=$(git rev-parse --show-toplevel)
+cd "$ROOT"
+
+rojo()  { printf '\033[31m%s\033[0m\n' "$1"; }
+verde() { printf '\033[32m%s\033[0m\n' "$1"; }
+
+command -v node >/dev/null 2>&1 || { rojo "✗ no encuentro node"; exit 1; }
+
+fallos=0
+for f in pb_public/js/*.js pb_hooks/*.js pb_migrations/*.js mcp/*.js; do
+  [ -f "$f" ] || continue
+  if ! node --check "$f" 2>/tmp/pp-err; then
+    rojo "✗ SyntaxError en $f"; sed 's/^/    /' /tmp/pp-err; fallos=1
+  fi
+done
+[ "$fallos" -eq 0 ] || { rojo "push abortado"; exit 1; }
+verde "✓ sintaxis"
+
+if ls tests/*.test.js >/dev/null 2>&1; then
+  if ! salida=$(node --test tests/*.test.js 2>&1); then
+    rojo "✗ tests en rojo"
+    printf '%s\n' "$salida" | grep -E '^(not ok|# (fail|tests|pass))|AssertionError' | sed 's/^/    /'
+    exit 1
+  fi
+  verde "✓ $(printf '%s\n' "$salida" | sed -n 's/^# pass \([0-9]*\)/\1/p') tests"
+fi

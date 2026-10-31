@@ -1,0 +1,75 @@
+# samukis-notes · Caddy — compresión, caché y las dos entradas
+# ─────────────────────────────────────────────────────────────
+# Calcado del Caddyfile de tareas. PocketBase no comprime ni manda
+# Cache-Control; Caddy se pone delante solo para eso y para separar la entrada
+# de la tailnet (:8093) de la pública (:8094, la que publica cloudflared como
+# notes.samukis.xyz).
+
+(notes) {
+	# La lista de tipos a comprimir es EXPLÍCITA y NO incluye
+	# `text/event-stream`: ese es el realtime de PocketBase (SSE) y comprimirlo
+	# lo bufferea y mata la sincronización en vivo.
+	encode {
+		zstd
+		gzip
+		match {
+			header Content-Type text/html*
+			header Content-Type text/css*
+			header Content-Type text/plain*
+			header Content-Type text/javascript*
+			header Content-Type application/javascript*
+			header Content-Type application/json*
+			header Content-Type application/manifest+json*
+			header Content-Type image/svg+xml*
+		}
+	}
+
+	# Los assets con `?v=N` son inmutables por URL: caché de un año. Regla
+	# dura: editar un js/css SIN subir el `?v` lo deja pegado en el navegador.
+	@versioned query v=*
+	header @versioned Cache-Control "public, max-age=31536000, immutable"
+
+	# El HTML dice qué `?v` toca, así que siempre se revalida.
+	@html path / /index.html
+	header @html Cache-Control "no-cache"
+
+	# Fase 1: el buscador (índice FTS5 + vectores) contestará aquí.
+	# handle /search/* {
+	# 	reverse_proxy buscador:8095
+	# }
+
+	reverse_proxy pocketbase:8090
+}
+
+# Tailnet / LAN: <ip-del-servidor>:8093. Todo abierto: solo llegan tus dispositivos.
+:8093 {
+	import notes
+}
+
+# Pública: notes.samukis.xyz → Cloudflare Tunnel → cloudflared (red host) →
+# 127.0.0.1:8094. "Viene de internet" lo decide el puerto por el que entró,
+# no una cabecera que se pueda falsificar.
+:8094 {
+	# Desde internet no se administra nada: ni el panel /_/, ni el login de
+	# superusuario, ni el registro de cuentas. Las cuentas se crean desde la
+	# tailnet (y además `users.createRule` está cerrada).
+	@admin {
+		path /_/* /_
+		path /api/collections/_superusers/*
+		path /api/backups* /api/settings* /api/logs* /api/collections /api/collections/import
+	}
+	@signup {
+		method POST
+		path /api/collections/users/records
+	}
+	respond @admin 404
+	respond @signup 403
+
+	# Fase 2: conector MCP de Claude (web y móvil). El secreto va en la ruta
+	# y lo valida el propio servidor; Caddy solo enruta.
+	# handle /mcp/* {
+	# 	reverse_proxy mcp:8092
+	# }
+
+	import notes
+}

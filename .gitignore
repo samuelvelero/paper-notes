@@ -1,0 +1,10 @@
+data/
+pb_data/
+node_modules/
+.env
+# De .claude/ solo se versionan las skills (conocimiento del proyecto).
+.claude/*
+!.claude/skills/
+# Temporales (PowerShell escribe UTF-16 y ensucia el repo)
+temp_*.js
+*.tmp
