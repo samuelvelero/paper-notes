@@ -146,6 +146,23 @@ aislamiento) y necesita el servicio levantado con Docker: no corre en local
 sin él. `mcp-smoke.mjs` arranca `mcp/server.js` por stdio con un usuario
 ficticio y recorre las siete herramientas contra ese mismo servidor.
 
+## Importadores (`importers/`)
+
+- **iCloud Notes**: dos scripts para la consola del navegador con la sesión
+  abierta en icloud.com/notes (la CSP de iCloud no deja hablar con localhost,
+  así que cada uno descarga un archivo) y uno de Node. `icloud-extract.js`
+  saca el texto con formato de cada nota (`getTopoText()`) más carpetas y
+  etiquetas (`maps.json`); `icloud-adjuntos-extract.js` recorre la zona
+  "Notes" de CloudKit con el `CloudKit` JS de la página y empaqueta fotos,
+  dibujos, vistas previas y URLs en `icloud-adjuntos.bin`, que
+  `icloud-adjuntos.mjs` desempaqueta en `adjuntos/`. `icloud.mjs <notas>`
+  convierte al dialecto, crea carpetas anidadas, sube las imágenes a
+  `attachments` y enlaza `![nombre](attachments/<id>)`; es idempotente
+  (`imported_from = icloud:<id>`, `adjuntos/subidos.json`). Se autentica como
+  usuario (`NOTAS_EMAIL`/`NOTAS_PASSWORD`) o como superusuario fijando el dueño
+  (`NOTAS_ADMIN_*` + `NOTAS_OWNER`). `--dry` enseña el Markdown sin subir.
+- **Obsidian**: pendiente (Fase 4).
+
 ## Despliegue
 
 Como tareas: un remoto `casa` apunta a un repo bare en el servidor cuyo

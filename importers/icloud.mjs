@@ -22,8 +22,13 @@
      100 lista con puntos · 101 con guiones · 102 numerada · 103 casillas
    `indent` anida; `toDo.done` marca la casilla; `blockQuoteLevel` cita.
    Inline: `fontHints` 1 negrita, 2 cursiva, 3 ambas; `underlined`,
-   `strikethrough`, `link`. Los adjuntos llegan como objetos: las imágenes se
-   anotan como pendientes (segunda pasada), las tablas como texto si viene. */
+   `strikethrough`, `link`. Los adjuntos llegan como objetos con el id del
+   registro `Attachment` de CloudKit. Si junto a la carpeta de notas hay una
+   `adjuntos/` (la que escribe `importers/icloud-adjuntos.mjs`), las imágenes,
+   dibujos y vistas previas se suben a `attachments` y la nota las enlaza como
+   `![nombre](attachments/<id>)`; los enlaces recuperan su URL. Sin esa
+   carpeta se anotan como pendientes. Las subidas se apuntan en
+   `adjuntos/subidos.json` (id de Apple → id en PocketBase) para no repetirlas. */
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -32,7 +37,8 @@ const args = process.argv.slice(2);
 const dir = args.find(a => !a.startsWith('--'));
 const DRY = args.includes('--dry');
 const LIMIT = +(args[args.indexOf('--limit') + 1] || 0) || 0;
-if (!dir) { console.error('uso: node importers/icloud.mjs <carpeta> [--dry] [--limit N]'); process.exit(2); }
+const IS_MAIN = (process.argv[1] || '').replace(/\\/g, '/').endsWith('/icloud.mjs');   // importado desde los tests, no hace nada
+if (IS_MAIN && !dir) { console.error('uso: node importers/icloud.mjs <carpeta> [--dry] [--limit N]'); process.exit(2); }
 
 const BASE = (process.env.NOTAS_URL || 'http://127.0.0.1:8093').replace(/\/+$/, '');
 const EMAIL = process.env.NOTAS_EMAIL, PASS = process.env.NOTAS_PASSWORD;
@@ -40,23 +46,46 @@ const EMAIL = process.env.NOTAS_EMAIL, PASS = process.env.NOTAS_PASSWORD;
    usuario en `users`). El hook de dueño no toca lo que manda un superusuario. */
 const ADMIN_EMAIL = process.env.NOTAS_ADMIN_EMAIL, ADMIN_PASS = process.env.NOTAS_ADMIN_PASSWORD, OWNER = process.env.NOTAS_OWNER || '';
 
+/* ─── Adjuntos (opcional) ─── */
+const ADJ_DIR = dir ? path.join(dir, '..', 'adjuntos') : '';
+const SUBIDOS_PATH = ADJ_DIR ? path.join(ADJ_DIR, 'subidos.json') : '';
+let ADJ = {};        // id de Apple → { uti, name, url, image: { file, mime, width, height } | null, extras }
+let SUBIDOS = {};    // id de Apple → { id, note } en PocketBase
+if (ADJ_DIR && fs.existsSync(path.join(ADJ_DIR, 'index.json'))) {
+  ADJ = JSON.parse(fs.readFileSync(path.join(ADJ_DIR, 'index.json'), 'utf8')).adjuntos || {};
+  if (fs.existsSync(SUBIDOS_PATH)) SUBIDOS = JSON.parse(fs.readFileSync(SUBIDOS_PATH, 'utf8'));
+}
+export function setAdjuntos(adj, subidos) { ADJ = adj || {}; SUBIDOS = subidos || {}; }
+const altOf = (e, fallback) => ((e && e.name) || '').replace(/\.[a-z0-9]{2,4}$/i, '').replace(/[\[\]()]/g, '').trim() || fallback;
+
 /* ─── Markdown ─── */
 const esc = s => s.replace(/([*_`~\\])/g, '\\$1');
 function inlineMd(runs) {
   let out = '';
   for (const r of runs) {
     let t = r.text || '';
-    if (!t) continue;
+    if (!t && !r.attachment) continue;
     if (r.attachment) {
       const a = r.attachment, u = a.uti || '';
       if (a.tag) t = '#' + a.tag;                                   // etiqueta inline (viene del mapa de hashtags)
       else if (/hashtag/.test(u)) t = '';                            // etiqueta sin texto conocido: se añade al final
       else if (/calculateresult/.test(u)) t = '';                    // resultado de cálculo inline: el texto ya está
-      else if (/jpeg|png|gif|heic|webp|public\.image/i.test(u)) t = `[imagen pendiente: ${a.id}]`;
-      else if (/com\.apple\.paper/.test(u)) t = `[dibujo o escaneo pendiente: ${a.id}]`;
       else if (/table/.test(u)) t = a.table ? tableMd(a.table) : '[tabla de Apple Notes, no importada]';
-      else if (/public\.url/.test(u)) t = a.url ? `<${a.url}>` : '[vista previa de enlace]';
+      else if (/public\.url/.test(u)) { const url = a.url || (ADJ[a.id] && ADJ[a.id].url); t = url ? `<${url}>` : '[vista previa de enlace]'; }
+      else if (SUBIDOS[a.id]) {
+        /* La imagen es un bloque en el dialecto (sola en su línea): se separa
+           del texto con líneas en blanco; el aviso de PDF o vídeo va debajo. */
+        const e = ADJ[a.id] || {};
+        const isPdf = /pdf|doc\.scan/.test(u), isVideo = /mpeg|movie|video|quicktime/.test(u);
+        t = `\n\n![${altOf(e, isPdf ? 'documento' : /paper|drawing/.test(u) ? 'dibujo' : 'imagen')}](attachments/${SUBIDOS[a.id].id})\n\n`;
+        if (isPdf) t += `[PDF no importado: ${e.name || a.id}]\n\n`;
+        else if (isVideo) t += `[vídeo no importado: ${e.name || a.id}]\n\n`;
+      }
+      else if (/jpeg|png|gif|heic|webp|public\.image/i.test(u)) t = `[imagen pendiente: ${a.id}]`;
+      else if (/com\.apple\.paper|drawing/.test(u)) t = `[dibujo o escaneo pendiente: ${a.id}]`;
       else if (/gallery/.test(u)) t = `[galería pendiente: ${a.id}]`;
+      else if (/mpeg|movie|video|quicktime/.test(u)) t = `[vídeo no importado: ${(ADJ[a.id] && ADJ[a.id].name) || a.id}]`;
+      else if (/pdf/.test(u)) t = `[PDF no importado: ${(ADJ[a.id] && ADJ[a.id].name) || a.id}]`;
       else t = `[adjunto pendiente: ${u}]`;
       out += t; continue;
     }
@@ -83,10 +112,14 @@ export function toMarkdown(note) {
   const out = [];
   let num = 0, lastList = null;
   for (const p of note.paragraphs) {
-    const text = inlineMd(p.runs);
+    /* Las imágenes salen del párrafo y van debajo como bloques propios: en
+       un título o una viñeta romperían el prefijo. */
+    const imgs = [];
+    const text = inlineMd(p.runs).replace(/\n*(!\[[^\]]*\]\(attachments\/[^)]+\))\n*(\[(?:PDF|vídeo) no importado:[^\]]*\]\n*)?/g, (m, img, extra) => { imgs.push(img + (extra ? '\n\n' + extra.trim() : '')); return ' '; }).replace(/ {2,}/g, ' ');
     const indent = '  '.repeat(p.indent || 0);
     const st = p.style;
     let line;
+    if (imgs.length && !text.trim()) { out.push(imgs.join('\n\n')); lastList = -1; num = 0; continue; }
     if (st === 0) line = '# ' + text.trim();
     else if (st === 1) line = '## ' + text.trim();
     else if (st === 2) line = '### ' + text.trim();
@@ -103,6 +136,7 @@ export function toMarkdown(note) {
     else out.push(line);
     lastList = isList ? st : (line.trim() ? -1 : lastList);
     if (!isList) num = 0;
+    if (imgs.length) { out.push(imgs.join('\n\n')); lastList = -1; num = 0; }
   }
   let md = out.join('\n\n').replace(/\n{3,}/g, '\n\n').trim();
   /* Apple toma el título de la primera línea aunque no tenga formato: si la
@@ -123,7 +157,8 @@ export function toMarkdown(note) {
 /* ─── PocketBase ─── */
 let token = '';
 async function api(method, p, body) {
-  const r = await fetch(BASE + p, { method, headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: token } : {}) }, body: body ? JSON.stringify(body) : undefined });
+  const isFD = typeof FormData !== 'undefined' && body instanceof FormData;
+  const r = await fetch(BASE + p, { method, headers: { ...(isFD ? {} : { 'Content-Type': 'application/json' }), ...(token ? { Authorization: token } : {}) }, body: isFD ? body : body ? JSON.stringify(body) : undefined });
   const d = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(`${method} ${p} → ${r.status} ${d.message || ''} ${d.data ? JSON.stringify(d.data) : ''}`);
   return d;
@@ -194,25 +229,50 @@ async function main() {
     return rec.id;
   }
 
+  /* adjuntos de una nota que tienen imagen en `adjuntos/` y aún no se han subido */
+  const pendientes = n => { const ids = new Set(); for (const p of n.paragraphs) for (const r of p.runs) if (r.attachment && r.attachment.id) ids.add(r.attachment.id); return [...ids].filter(id => ADJ[id] && ADJ[id].image && !SUBIDOS[id]); };
+  async function subirAdjuntos(n, noteId) {
+    let subidos = 0;
+    for (const id of pendientes(n)) {
+      const img = ADJ[id].image;
+      const fd = new FormData();
+      if (OWNER) fd.append('owner', OWNER);
+      fd.append('note', noteId); fd.append('kind', 'image'); fd.append('width', String(img.width || 0)); fd.append('height', String(img.height || 0));
+      fd.append('file', new Blob([fs.readFileSync(path.join(ADJ_DIR, img.file))], { type: img.mime }), img.file);
+      const rec = await api('POST', '/api/collections/attachments/records', fd);
+      SUBIDOS[id] = { id: rec.id, note: noteId };
+      fs.writeFileSync(SUBIDOS_PATH, JSON.stringify(SUBIDOS, null, 1));
+      subidos++;
+    }
+    return subidos;
+  }
+  if (Object.keys(ADJ).length) console.log(`adjuntos/: ${Object.keys(ADJ).length} adjuntos, ${Object.values(ADJ).filter(a => a.image).length} con imagen, ${Object.keys(SUBIDOS).length} ya subidos`);
+
   const existing = new Map((await listAll('notes', "imported_from ~ 'icloud:'" + (ownerFilter ? ' && ' + ownerFilter : ''), 'id,imported_from,body,version')).map(n => [n.imported_from, n]));
-  let creadas = 0, actualizadas = 0, iguales = 0, fallos = 0;
+  let creadas = 0, actualizadas = 0, iguales = 0, fallos = 0, imagenes = 0, conImagenes = 0;
   for (const n of todo) {
     const key = 'icloud:' + n.id;
     try {
       const body = toMarkdown(n);
       const folder = await ensureFolder(n.folderPath);
-      const ex = existing.get(key);
+      let rec = existing.get(key);
       const common = { ...ownerField, folder, pinned: !!n.pinned, client_updated: n.modified || new Date().toISOString(), device: 'importador-icloud', imported_from: key };
-      if (ex) {
-        if (ex.body === body) { iguales++; continue; }
-        await api('PATCH', `/api/collections/notes/records/${ex.id}`, { ...common, body, base_version: ex.version });
-        actualizadas++;
+      if (rec) {
+        if (rec.body === body) iguales++;
+        else { rec = await api('PATCH', `/api/collections/notes/records/${rec.id}`, { ...common, body, base_version: rec.version }); actualizadas++; }
       } else {
-        await api('POST', '/api/collections/notes/records', { ...common, body });
+        rec = await api('POST', '/api/collections/notes/records', { ...common, body });
         creadas++;
+      }
+      /* segunda pasada: subir las imágenes de la nota y enlazarlas en el cuerpo */
+      const subidos = await subirAdjuntos(n, rec.id);
+      if (subidos) {
+        imagenes += subidos; conImagenes++;
+        const body2 = toMarkdown(n);
+        if (body2 !== rec.body) await api('PATCH', `/api/collections/notes/records/${rec.id}`, { ...common, body: body2, base_version: rec.version });
       }
     } catch (e) { fallos++; console.error('✘', n.title, e.message); }
   }
-  console.log(`\ncreadas ${creadas} · actualizadas ${actualizadas} · sin cambios ${iguales} · fallos ${fallos}`);
+  console.log(`\ncreadas ${creadas} · actualizadas ${actualizadas} · sin cambios ${iguales} · fallos ${fallos}` + (imagenes ? ` · ${imagenes} imágenes subidas en ${conImagenes} notas` : ''));
 }
-if (import.meta.url === `file://${process.argv[1].replace(/\\/g, '/')}` || process.argv[1].endsWith('icloud.mjs')) main().catch(e => { console.error(e); process.exit(1); });
+if (IS_MAIN) main().catch(e => { console.error(e); process.exit(1); });

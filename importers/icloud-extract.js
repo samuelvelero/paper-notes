@@ -11,6 +11,16 @@
    una página https se puede llamar a 127.0.0.1 sin bloqueo de contenido
    mixto. Luego `importers/icloud.mjs` convierte y sube.
 
+   OJO: la CSP de icloud.com bloquea `connect-src` y `frame-src` hacia
+   127.0.0.1, así que el POST al receptor no llega. Lo que funcionó fue
+   guardar las notas en memoria (`window.__notas`) y descargarlas en un solo
+   JSON con un `<a download>` (como hace `icloud-adjuntos-extract.js`), y
+   luego partirlo en un JSON por nota. Las carpetas y el texto de las
+   etiquetas inline no están en el modelo de la nota: se sacan aparte
+   (`folder.getAllNotes()` y `note.getSearchableContent()`) a un `maps.json`
+   junto a la carpeta de notas. Los adjuntos (imágenes, dibujos, enlaces) son
+   la segunda pasada: `icloud-adjuntos-extract.js`.
+
    Progreso en `window.__exp` ({done, total, errors}). */
 (async function () {
   const RECEIVER = 'http://127.0.0.1:8795/nota';

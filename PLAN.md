@@ -250,12 +250,17 @@ v1; semántica cuando exista el modelo on-device, v2).
   conserva carpetas, convierte `[[wikilinks]]` a enlaces entre notas si el
   destino también se importa, y adjunta imágenes locales. Las notas quedan
   marcadas `imported_from: obsidian` para poder repetir sin duplicar.
-- **iCloud Notes** (sin dispositivo Apple): no hay exportación oficial desde
-  icloud.com. Dos opciones, por probar en este orden:
-  1. `privacy.apple.com` → "Obtener una copia de tus datos": comprobar si
-     incluye Notas (no está confirmado).
-  2. Script de navegador (Playwright) que recorre icloud.com/notes y copia
-     cada nota como HTML → Markdown. Lento pero funciona para cientos de notas.
+- **iCloud Notes** (sin dispositivo Apple) ✅ 31 oct 2026: no hay exportación
+  oficial, pero la app web carga cada nota en memoria con atributos y el
+  CloudKit JS oficial. Tres piezas en `importers/`: `icloud-extract.js`
+  (consola del navegador: texto con formato de cada nota + carpetas y
+  etiquetas, descarga un JSON), `icloud-adjuntos-extract.js` (consola: recorre
+  la zona "Notes" de CloudKit y baja fotos, dibujos, vistas previas y URLs en
+  un `.bin`) e `icloud.mjs` (Node: Markdown del dialecto, carpetas anidadas,
+  fijadas, fechas, sube las imágenes a `attachments`; idempotente por
+  `imported_from = icloud:<id>`). Resultado: 689 notas y ~280 imágenes y
+  dibujos. Fuera: 4 notas bloqueadas con contraseña, 11 tablas, vídeos y PDF
+  (solo su vista previa). Los HEIC entran como vista previa PNG de 384 px.
 
 ---
 
@@ -270,7 +275,7 @@ cuando ya hay web para verla.
 | **1. Buscador** ✅ 31 oct 2026 | Contenedor `buscador`: FTS5 trigram + unicode61, embeddings, `sqlite-vec`, RRF, endpoint `/search`, reindexado por hook y completo | "reunon" encuentra "reunión"; "cosas para el viaje" encuentra una nota que dice "equipaje"; respuesta < 100 ms con 5 000 notas de prueba. **Medido**: léxico 8–14 ms; con semántica 130–310 ms en la laptop (Celeron N3350: el coste es embeber la consulta, no el índice). La web usa su índice local para escribir-y-ver y el buscador con semántica al confirmar; el MCP siempre con semántica. Pendiente: medir con 5 000 notas |
 | **2. MCP** ✅ 31 oct 2026 | `mcp/server.js` con las 7 herramientas, tests (`tests/mcp.test.js` puros, `tests/mcp-smoke.mjs` en vivo), servicio `mcp` en compose, ruta `/mcp/<token>` en Caddy. Conector remoto: pendiente de registrarlo en Claude cuando `notes.samukis.xyz` esté publicado | Desde Claude móvil: "busca en mis notas lo del router" devuelve la nota sin que el LLM liste nada. **Probado** por stdio contra el servidor: "contraseña del wifi" → la nota del router en 206 ms; falta la prueba desde Claude móvil (necesita el hostname) |
 | **3. PWA v1** 🚧 desplegada 31 oct 2026 | Shell + sidebar (carpetas, fijadas, etiquetas, papelera) + lista + editor ProseMirror + búsqueda local + adjuntos + offline + historial de versiones + ajustes (título automático). **Hecho**: todo lo anterior, con `mdpm.js` (Markdown ↔ ProseMirror propio, 8 tests de ida y vuelta) y la UI de HyperOS en móvil y escritorio. Pendiente dentro de la fase: pulir con uso real (gestos, teclado de Android, pegado), modo oscuro revisado a ojo, PWA instalada en el teléfono | Uso diario en PC y celular dos semanas sin volver a Apple Notes (empieza ahora) |
-| **4. Migración** | Importador Obsidian + exportación de iCloud | Todas las notas viejas dentro, sin duplicados |
+| **4. Migración** 🚧 iCloud hecho 31 oct 2026 | Importador Obsidian + exportación de iCloud. **Hecho**: iCloud completo (689 notas, carpetas, etiquetas, imágenes y dibujos). Pendiente: Obsidian | Todas las notas viejas dentro, sin duplicados |
 | **5. Android v1** | App "Notas": lista, editor, búsqueda, offline, sync, tile, share target, widget, ContentProvider, deep link | Misma prueba de dos semanas, ahora en el teléfono |
 | **6. Quick Search** | Fork con sección "Notas" | Al escribir en Quick Search aparecen tus notas y se abren al tocar |
 | **7. v2** | Tablas, semántica on-device, variante ME3, trazos de lápiz, carpetas inteligentes | — |
