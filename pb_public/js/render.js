@@ -190,15 +190,25 @@ function historyHTML() {
 }
 
 /* ─── ajustes ─── */
+/* En Mac e iOS el <select> nativo es bonito y se queda; en el resto
+   (Windows, Android) el desplegable lo pinta la app con su popover. */
+const isApple = () => /Mac|iPhone|iPad|iPod/.test(navigator.platform || '') || /Mac|iPhone|iPad/.test(navigator.userAgent || '');
+const SETTING_OPTS = {
+  font: [['s', 'Pequeña'], ['m', 'Mediana'], ['l', 'Grande']],
+  sort: [['updated', 'Por fecha de modificación'], ['created', 'Por fecha de creación'], ['title', 'Por título']],
+  layout: [['grid', 'Ver en cuadrícula'], ['list', 'Ver en lista']],
+};
 function settingsHTML() {
-  const sel = (key, val, opts) => `<span class="st-val"><select data-act="setting" data-arg="${key}">${opts.map(([v, l]) => `<option value="${v}"${val === v ? ' selected' : ''}>${l}</option>`).join('')}</select>${I.chevDown()}</span>`;
+  const sel = (key, val, opts) => isApple()
+    ? `<span class="st-val"><select data-act="setting" data-arg="${key}">${opts.map(([v, l]) => `<option value="${v}"${val === v ? ' selected' : ''}>${l}</option>`).join('')}</select>${I.chevDown()}</span>`
+    : `<button class="st-val pick" data-act="pickSetting" data-arg="${key}">${esc((opts.find(o => o[0] === val) || opts[0])[1])}${I.chevDown()}</button>`;
   const tog = (key, on) => `<button class="tog${on ? ' on' : ''}" data-act="setting" data-arg="${key}" role="switch" aria-checked="${on}"><span></span></button>`;
   const row = (label, right, act, arg) => `<div class="st-row${act ? ' nav' : ''}"${act ? ` data-act="${act}"${arg ? ` data-arg="${esc(arg)}"` : ''}` : ''}><span class="st-lbl">${label}</span>${right}</div>`;
   return `<div class="st-wrap">
     <div class="sec-h">Estilo</div><div class="st-card">
-      ${row('Tamaño de fuente', sel('font', settings.font, [['s', 'Pequeña'], ['m', 'Mediana'], ['l', 'Grande']]))}
-      ${row('Ordenar', sel('sort', settings.sort, [['updated', 'Por fecha de modificación'], ['created', 'Por fecha de creación'], ['title', 'Por título']]))}
-      ${row('Diseño', sel('layout', settings.layout, [['grid', 'Ver en cuadrícula'], ['list', 'Ver en lista']]))}
+      ${row('Tamaño de fuente', sel('font', settings.font, SETTING_OPTS.font))}
+      ${row('Ordenar', sel('sort', settings.sort, SETTING_OPTS.sort))}
+      ${row('Diseño', sel('layout', settings.layout, SETTING_OPTS.layout))}
     </div>
     <div class="sec-h">Notas</div><div class="st-card">
       ${row('Título automático en notas nuevas', tog('autoTitle', settings.autoTitle))}

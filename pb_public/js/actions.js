@@ -313,6 +313,7 @@ document.addEventListener('click', e => {
     case 'modalClose': closeModal(); break;
     case 'modalOk': modalOk(); break;
     case 'setting': if (el.classList.contains('tog')) setSetting(arg, !el.classList.contains('on')); break;
+    case 'pickSetting': openPop(el, SETTING_OPTS[arg].map(([v, l]) => ({ label: l, icon: settings[arg] === v ? I.check() : '', run: () => setSetting(arg, v) }))); break;
     case 'exportAll': exportAll(); break;
     case 'logout': logout(); break;
     case 'reload': location.reload(); break;
