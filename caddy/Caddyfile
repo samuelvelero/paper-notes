@@ -33,10 +33,11 @@
 	@html path / /index.html
 	header @html Cache-Control "no-cache"
 
-	# Fase 1: el buscador (índice FTS5 + vectores) contestará aquí.
-	# handle /search/* {
-	# 	reverse_proxy buscador:8095
-	# }
+	# El buscador (índice FTS5 + vectores). Conserva el prefijo /search: el
+	# servicio ya responde en /search, /search/health, /search/index…
+	handle /search* {
+		reverse_proxy buscador:8095
+	}
 
 	reverse_proxy pocketbase:8090
 }
@@ -62,8 +63,12 @@
 		method POST
 		path /api/collections/users/records
 	}
+	# Las rutas internas del buscador (las llama el hook por la red interna)
+	# van con token, pero desde internet ni se ven.
+	@buscador_interno path /search/index /search/reindex
 	respond @admin 404
 	respond @signup 403
+	respond @buscador_interno 404
 
 	# Fase 2: conector MCP de Claude (web y móvil). El secreto va en la ruta
 	# y lo valida el propio servidor; Caddy solo enruta.

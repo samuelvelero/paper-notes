@@ -31,6 +31,9 @@ services:
       PB_ADMIN_EMAIL: ${PB_ADMIN_EMAIL:?define PB_ADMIN_EMAIL en .env}
       PB_ADMIN_PASSWORD: ${PB_ADMIN_PASSWORD:?define PB_ADMIN_PASSWORD en .env}
       TZ: ${TZ:-America/Lima}
+      # El hook pb_hooks/search.pb.js avisa al buscador de cada nota que cambia.
+      BUSCADOR_URL: http://buscador:8095
+      INDEX_TOKEN: ${INDEX_TOKEN:?define INDEX_TOKEN en .env}
     volumes:
       - ./data/pb_data:/pb/pb_data          # la base de datos (haz backup de esta carpeta)
       - ./pb_public:/pb/pb_public:ro        # la PWA: se edita sin reconstruir
@@ -42,8 +45,32 @@ services:
       timeout: 5s
       retries: 5
 
-  # Fase 1: `buscador` (índice FTS5 + vectores). Fase 2: `mcp`. Se añaden aquí
-  # cuando toquen; Caddy ya reserva sus rutas (/search/*, /mcp/*).
+  # El buscador: índice propio (FTS5 de palabras y trigramas + vectores con
+  # sqlite-vec) en /data, y el modelo de embeddings cacheado en /data/models.
+  # Lee TODAS las notas de PocketBase como superusuario y filtra por dueño en
+  # cada consulta, validando el token del usuario que pregunta. Caddy le pasa
+  # /search* en las dos entradas. Ver buscador/README.md.
+  buscador:
+    build: ./buscador
+    container_name: notes-buscador
+    restart: unless-stopped
+    expose:
+      - "8095"
+    environment:
+      PB_URL: http://pocketbase:8090
+      PB_ADMIN_EMAIL: ${PB_ADMIN_EMAIL}
+      PB_ADMIN_PASSWORD: ${PB_ADMIN_PASSWORD}
+      INDEX_TOKEN: ${INDEX_TOKEN:?define INDEX_TOKEN en .env}
+      EMBED_MODEL: ${EMBED_MODEL:-jinaai/jina-embeddings-v2-base-es}
+      SYNC_SECONDS: ${SYNC_SECONDS:-60}
+      TZ: ${TZ:-America/Lima}
+    volumes:
+      - ./data/buscador:/data
+    depends_on:
+      pocketbase:
+        condition: service_healthy
+
+  # Fase 2: `mcp`. Caddy ya reserva su ruta (/mcp/*).
 
 volumes:
   caddy_data:
