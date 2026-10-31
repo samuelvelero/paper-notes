@@ -1,0 +1,7 @@
+# Todo en LF: el servidor es Linux y un pre-push o un Dockerfile con CRLF
+# no corren. Git normaliza al hacer commit aunque Windows tenga autocrlf.
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.webp binary
+*.woff2 binary
