@@ -39,6 +39,14 @@
 		reverse_proxy buscador:8095
 	}
 
+	# El conector MCP de Claude (web y móvil). El secreto va en la ruta
+	# (/mcp/<MCP_PATH_TOKEN>) y lo valida el propio servidor: Caddy solo
+	# enruta. Está en las dos entradas: la pública es la que usa Claude desde
+	# la nube; la de la tailnet sirve para probarlo desde la PC.
+	handle /mcp/* {
+		reverse_proxy mcp:8092
+	}
+
 	reverse_proxy pocketbase:8090
 }
 
@@ -69,12 +77,6 @@
 	respond @admin 404
 	respond @signup 403
 	respond @buscador_interno 404
-
-	# Fase 2: conector MCP de Claude (web y móvil). El secreto va en la ruta
-	# y lo valida el propio servidor; Caddy solo enruta.
-	# handle /mcp/* {
-	# 	reverse_proxy mcp:8092
-	# }
 
 	import notes
 }

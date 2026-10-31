@@ -50,8 +50,16 @@ del servidor (ignorado); los datos del despliegue, fuera del repo.
   sync periódico de respaldo. Caddy pasa `/search*` sin recortar el prefijo.
   Contrato completo en `buscador/README.md`. El modelo se cachea en el
   volumen (`data/buscador/models`); cambiarlo recalcula los vectores.
-- **MCP** (Fase 2): `mcp/server.js`, un archivo, sin dependencias, modo stdio y
-  modo HTTP tras `/mcp/<token>`.
+- **MCP** (`mcp/server.js`): un archivo, sin dependencias, modo stdio y modo
+  HTTP tras `/mcp/<MCP_PATH_TOKEN>` (servicio `mcp`, Caddy lo enruta en las
+  dos entradas). Siete herramientas en español (`notas_buscar`, `nota_leer`,
+  `nota_crear`, `nota_agregar`, `nota_actualizar`, `notas_recientes`,
+  `carpetas_listar`). Se autentica como usuario de `users` con
+  `MCP_NOTAS_EMAIL`/`MCP_NOTAS_PASSWORD`; busca en el buscador con ese token
+  y cae a `title ~ / plain ~` de PocketBase si no responde. Lee antes de
+  escribir (`base_version`), solo manda `body`, nunca borra: `papelera: true`
+  como máximo. Las carpetas deben existir (`crear_carpeta: true` para crear).
+  Contrato en `mcp/README.md`.
 - **Android** (Fase 5): Kotlin + Compose, Room, offline-first. Quick tile,
   share target, widget, ContentProvider para Quick Search (fork).
 
@@ -103,7 +111,7 @@ para probar un cambio de esquema, carpeta de datos nueva.
 Pruebas (sin npm):
 
 ```bash
-node --test tests/md.test.js
+node --test tests/*.test.js
 ```
 
 ```bash
@@ -115,7 +123,8 @@ versiones, conflicto, aislamiento entre usuarios, carpetas y papelera, y los
 borra. Vale contra el servidor real. `search-smoke.mjs` hace lo mismo con el
 buscador (prefijos, tildes, errores tipográficos, semántica, filtros,
 aislamiento) y necesita el servicio levantado con Docker: no corre en local
-sin él.
+sin él. `mcp-smoke.mjs` arranca `mcp/server.js` por stdio con un usuario
+ficticio y recorre las siete herramientas contra ese mismo servidor.
 
 ## Despliegue
 

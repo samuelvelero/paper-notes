@@ -70,7 +70,37 @@ services:
       pocketbase:
         condition: service_healthy
 
-  # Fase 2: `mcp`. Caddy ya reserva su ruta (/mcp/*).
+  # El conector MCP de Claude (web y móvil) en modo HTTP. Un solo archivo sin
+  # dependencias: se monta, no se construye; tras cambiarlo basta
+  # `docker compose restart mcp`. Solo lo alcanza Caddy por la red interna; la
+  # URL pública es https://notes.samukis.xyz/mcp/<MCP_PATH_TOKEN>. Habla con
+  # PocketBase y con el buscador directamente (sin pasar por Caddy) con la
+  # cuenta de usuario del .env, nunca con el superusuario.
+  mcp:
+    image: node:20-alpine
+    container_name: notes-mcp
+    restart: unless-stopped
+    working_dir: /app
+    command: ["node", "server.js"]
+    volumes:
+      - ./mcp:/app:ro
+      # md.js es el MISMO de la web y los hooks: el MCP lo usa para presentar.
+      - ./pb_public/js:/pbjs:ro
+    expose:
+      - "8092"
+    depends_on:
+      pocketbase:
+        condition: service_healthy
+    environment:
+      MCP_HTTP_PORT: "8092"
+      MCP_PATH_TOKEN: ${MCP_PATH_TOKEN:?define MCP_PATH_TOKEN en .env}
+      NOTAS_URL: http://pocketbase:8090
+      NOTAS_SEARCH_URL: http://buscador:8095/search
+      NOTAS_EMAIL: ${MCP_NOTAS_EMAIL:?define MCP_NOTAS_EMAIL en .env}
+      NOTAS_PASSWORD: ${MCP_NOTAS_PASSWORD:?define MCP_NOTAS_PASSWORD en .env}
+      NOTAS_MD_JS: /pbjs/md.js
+      NOTAS_TZ: ${TZ:-America/Lima}
+      TZ: ${TZ:-America/Lima}
 
 volumes:
   caddy_data:
