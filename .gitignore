@@ -8,3 +8,5 @@ node_modules/
 # Temporales (PowerShell escribe UTF-16 y ensucia el repo)
 temp_*.js
 *.tmp
+# El APK de Android y su página (los sube android/scripts/publicar-beta.sh; no van en git)
+pb_public/apk/
