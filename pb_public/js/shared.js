@@ -74,13 +74,13 @@
       files = d.files || {};
       const doc = MDPM.parse(d.body || '');
       $note.innerHTML = (doc.content || []).map(block).join('');
-      document.title = d.title || 'Nota compartida';
+      document.title = (d.title ? d.title + ' · ' : '') + 'Paper Notes';
       document.getElementById('sh-date').textContent = d.updated ? 'Actualizada el ' + niceDate(d.updated) : '';
     } catch (_) { fail('No se pudo cargar la nota. Revisa tu conexión.'); }
   }
   function fail(msg) {
     $note.innerHTML = `<p class="sh-gone">${esc(msg || 'Esta nota no existe o ya no se comparte.')}</p>`;
-    document.title = 'Nota no disponible';
+    document.title = 'Nota no disponible · Paper Notes';
   }
   load();
 })();

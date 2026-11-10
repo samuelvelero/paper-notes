@@ -3,19 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
-<title>Notas</title>
+<title>Paper Notes</title>
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Notas">
+<meta name="apple-mobile-web-app-title" content="Paper Notes">
 <meta name="theme-color" content="#F5F5F7" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#121214" media="(prefers-color-scheme: dark)">
 <!-- Regla dura (ver CLAUDE.md): al editar un js/css hay que subir el ?v=
      de TODOS, porque Caddy los cachea un año por URL. -->
-<link rel="stylesheet" href="/styles.css?v=6">
+<link rel="stylesheet" href="/styles.css?v=7">
 </head>
 <body>
 <div id="app" data-view="list">
@@ -40,7 +40,7 @@
 <div id="login" class="login">
   <form class="lg-card" onsubmit="event.preventDefault();doLogin()">
     <img class="lg-logo" src="/icons/icon-192.png" alt="">
-    <h2>Notas</h2>
+    <h2>Paper Notes</h2>
     <p class="lg-sub">Entra con tu cuenta</p>
     <input id="lg-email" type="email" placeholder="correo" autocomplete="username" required>
     <input id="lg-pass" type="password" placeholder="contraseña" autocomplete="current-password" required>
@@ -48,18 +48,18 @@
     <button id="lg-btn" type="submit">Entrar</button>
   </form>
 </div>
-<script src="/js/morphdom.js?v=6"></script>
-<script src="/js/prosemirror.js?v=6"></script>
-<script src="/js/md.js?v=6"></script>
-<script src="/js/mdpm.js?v=6"></script>
-<script src="/js/icons.js?v=6"></script>
-<script src="/js/state.js?v=6"></script>
-<script src="/js/idb.js?v=6"></script>
-<script src="/js/toast.js?v=6"></script>
-<script src="/js/sync.js?v=6"></script>
-<script src="/js/editor.js?v=6"></script>
-<script src="/js/render.js?v=6"></script>
-<script src="/js/actions.js?v=6"></script>
-<script src="/js/boot.js?v=6"></script>
+<script src="/js/morphdom.js?v=7"></script>
+<script src="/js/prosemirror.js?v=7"></script>
+<script src="/js/md.js?v=7"></script>
+<script src="/js/mdpm.js?v=7"></script>
+<script src="/js/icons.js?v=7"></script>
+<script src="/js/state.js?v=7"></script>
+<script src="/js/idb.js?v=7"></script>
+<script src="/js/toast.js?v=7"></script>
+<script src="/js/sync.js?v=7"></script>
+<script src="/js/editor.js?v=7"></script>
+<script src="/js/render.js?v=7"></script>
+<script src="/js/actions.js?v=7"></script>
+<script src="/js/boot.js?v=7"></script>
 </body>
 </html>

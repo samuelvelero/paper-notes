@@ -1,8 +1,8 @@
 {
   "id": "/",
-  "name": "Notas",
-  "short_name": "Notas",
-  "description": "Notas personales, self-hosted",
+  "name": "Paper Notes",
+  "short_name": "Paper",
+  "description": "Notas minimalistas y self-hosted, en cualquier dispositivo",
   "lang": "es",
   "dir": "ltr",
   "start_url": "/",

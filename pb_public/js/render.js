@@ -26,7 +26,7 @@ function sideHTML() {
   /* data-drop: acepta notas arrastradas desde la lista (actions.js). «Todo»
      no es una carpeta: no acepta. */
   const row = (key, icon, label, count, on) => `<button class="sd-row${on ? ' on' : ''}" data-act="goFolder" data-arg="${esc(key)}"${key !== 'all' ? ` data-drop="${esc(key)}"` : ''}><span class="sd-ico">${icon}</span><span class="sd-lbl">${esc(label)}</span><span class="sd-cnt">${count || ''}</span></button>`;
-  let h = `<div class="sd-brand">Notas</div>
+  let h = `<div class="sd-brand">Paper Notes</div>
   <div class="sd-search">${I.search()}<input id="q" placeholder="Buscar" value="${esc(st.q)}" autocomplete="off" enterkeyhint="search"></div>
   <div class="sd-scroll">`;
   h += row('all', I.note(), 'Todo', active().length, st.view !== 'trash' && st.folder === null);
