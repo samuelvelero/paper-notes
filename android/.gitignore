@@ -1,0 +1,11 @@
+.gradle/
+build/
+*/build/
+local.properties
+publicar.env
+*.apk
+.idea/
+.kotlin/
+# La regla "data/" de la raíz es para los datos del servidor: el paquete
+# de datos de la app sí se versiona.
+!app/src/main/java/com/samukis/papernotes/data/

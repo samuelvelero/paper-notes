@@ -24,7 +24,7 @@ configure. Open it, type, close it.
 
 - **Any device.** It's an installable web app (PWA): add it to the home
   screen on iPhone or Android, or install it from Chrome/Edge on Windows,
-  macOS and Linux.
+  macOS and Linux. On Android there is also a [native app](#android-app).
 - **Works offline.** Notes live in the browser (IndexedDB) and sync when the
   connection comes back. Edits from two devices don't silently overwrite each
   other: the losing version is kept in the history.
@@ -44,6 +44,32 @@ configure. Open it, type, close it.
   notes (it never deletes anything).
 
 The interface is in Spanish for now.
+
+## Android app
+
+A native Android client lives in [`android/`](android): Kotlin and Jetpack
+Compose, drawn by hand with the same look as the web app (no Material
+library), talking to the same server.
+
+- **Download:** the APK is attached to the
+  [Android releases](https://github.com/samuelvelero/paper-notes/releases)
+  (tags `android-v*`). [Obtainium](https://github.com/ImranR98/Obtainium)
+  can track them for updates. Requires Android 8 or newer.
+- **First launch:** type your server's address (the one you run with
+  `docker compose`) and log in with a user from the `users` collection.
+- **Offline-first:** notes are kept on the phone and synced in the
+  background; live updates while the app is open.
+- **Native editor** for the same Markdown dialect as the web: headings,
+  lists, to-dos, quotes, code, images. Opening a note on the phone never
+  rewrites it.
+- **Quick capture everywhere:** "Share to Paper Notes" from any app, two
+  Quick Settings tiles ("New note", "Search notes") and two home-screen
+  widgets (your notes, and a "New note" pill).
+- **Smooth:** asks the display for its highest refresh rate (120/144 Hz)
+  and ships as an optimized R8 build.
+
+Build it yourself with `cd android && ./gradlew assembleBeta` (JDK 17+ and the
+Android SDK). Details in [`android/CLAUDE.md`](android/CLAUDE.md).
 
 ## Stack
 
@@ -108,6 +134,7 @@ pb_hooks/         server logic: owner, derived fields, versions, trash, sharing
 pb_public/        the web app (PWA)
 buscador/         optional search service
 mcp/              optional MCP server for Claude
+android/          native Android app (Kotlin + Compose)
 importers/        iCloud Notes importer
 docs/             UI notes
 tests/            unit tests and API smoke tests

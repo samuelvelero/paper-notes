@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Mantener pulsado el icono: nota nueva y buscar. -->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut android:shortcutId="nueva" android:enabled="true" android:icon="@drawable/ic_atajo_nueva" android:shortcutShortLabel="@string/atajo_nueva">
+        <intent android:action="com.samukis.papernotes.NUEVA" android:targetPackage="com.samukis.papernotes" android:targetClass="com.samukis.papernotes.MainActivity" />
+    </shortcut>
+    <shortcut android:shortcutId="buscar" android:enabled="true" android:icon="@drawable/ic_atajo_buscar" android:shortcutShortLabel="@string/atajo_buscar">
+        <intent android:action="com.samukis.papernotes.BUSCAR" android:targetPackage="com.samukis.papernotes" android:targetClass="com.samukis.papernotes.MainActivity" />
+    </shortcut>
+</shortcuts>

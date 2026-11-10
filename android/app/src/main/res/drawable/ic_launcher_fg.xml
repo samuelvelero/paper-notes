@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- La hoja, dentro de la zona segura del icono adaptable (66 de 108). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
+    <path android:fillColor="#FFFFFF" android:pathData="M42.5,33.5h23a5,5 0,0 1,5 5v32a5,5 0,0 1,-5 5h-23a5,5 0,0 1,-5 -5v-32a5,5 0,0 1,5 -5z" />
+    <path android:fillColor="#FFC440" android:pathData="M44.7,44.6h18.6a1.25,1.25 0,0 1,0 2.5h-18.6a1.25,1.25 0,0 1,0 -2.5zM44.7,52.6h18.6a1.25,1.25 0,0 1,0 2.5h-18.6a1.25,1.25 0,0 1,0 -2.5zM44.7,60.6h11.4a1.25,1.25 0,0 1,0 2.5h-11.4a1.25,1.25 0,0 1,0 -2.5z" />
+</vector>

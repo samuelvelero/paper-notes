@@ -80,8 +80,10 @@ del servidor (ignorado); los datos del despliegue, fuera del repo.
   escribir (`base_version`), solo manda `body`, nunca borra: `papelera: true`
   como máximo. Las carpetas deben existir (`crear_carpeta: true` para crear).
   Contrato en `mcp/README.md`.
-- **Android** (Fase 5): Kotlin + Compose, Room, offline-first. Quick tile,
-  share target, widget, ContentProvider para Quick Search (fork).
+- **Android** (`android/`, Fase 5): Kotlin + Compose (solo `foundation`),
+  SQLite a pelo, offline-first. Tiles de ajustes rápidos, «Compartir a Paper
+  Notes», widgets. Su contexto propio está en `android/CLAUDE.md`. El APK
+  público trae el servidor vacío; las releases van con etiqueta `android-v*`.
 
 ## Modelo de datos (resumen; el detalle en la migración)
 

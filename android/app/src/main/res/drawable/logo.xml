@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- El icono de la web (scripts/icons.js): fondo ambar y una hoja blanca con tres lineas. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="64dp" android:height="64dp" android:viewportWidth="108" android:viewportHeight="108">
+    <path android:fillColor="#FFB300" android:pathData="M0,0h108v108h-108z" />
+    <path android:fillColor="#FFFFFF" android:pathData="M36.7,24.8h34.6a7.5,7.5 0,0 1,7.5 7.5v47.7a7.5,7.5 0,0 1,-7.5 7.5h-34.6a7.5,7.5 0,0 1,-7.5 -7.5v-47.7a7.5,7.5 0,0 1,7.5 -7.5z" />
+    <path android:fillColor="#FFC440" android:pathData="M39.9,41h28.2a1.85,1.85 0,0 1,0 3.7h-28.2a1.85,1.85 0,0 1,0 -3.7zM39.9,52.9h28.2a1.85,1.85 0,0 1,0 3.7h-28.2a1.85,1.85 0,0 1,0 -3.7zM39.9,64.8h17.3a1.85,1.85 0,0 1,0 3.7h-17.3a1.85,1.85 0,0 1,0 -3.7z" />
+</vector>

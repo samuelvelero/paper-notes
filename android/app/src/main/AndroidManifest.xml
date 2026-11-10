@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Subir en cuanto vuelve la red (Almacen) y el trabajo de Refresco con
+         condición de red: sin este permiso JobScheduler lanza SecurityException. -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <application
+        android:name=".PaperApp"
+        android:label="@string/app_name"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher"
+        android:theme="@style/Theme.Paper"
+        android:enableOnBackInvokedCallback="true"
+        android:allowBackup="false"
+        android:usesCleartextTraffic="${cleartext}"
+        android:supportsRtl="true">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <!-- papernotes://note/<id>: abrir una nota desde fuera. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="papernotes" android:host="note" />
+            </intent-filter>
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/shortcuts" />
+        </activity>
+
+        <!-- El cuadro flotante de nota rápida. Es también el destino de
+             «Compartir» de otras apps: por eso su etiqueta es el nombre de la
+             app (es lo que enseña la hoja de compartir). Tarea propia y fuera
+             de recientes: aparece encima de lo que haya y se va. -->
+        <activity
+            android:name=".CapturaRapida"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.Paper.Flotante"
+            android:taskAffinity=""
+            android:excludeFromRecents="true"
+            android:launchMode="singleTask"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+        </activity>
+
+        <!-- Ajustes rápidos: «Nota nueva» y «Buscar notas». -->
+        <service
+            android:name=".TileNota"
+            android:exported="true"
+            android:label="@string/tile_nota"
+            android:icon="@drawable/ic_tile_nota"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter><action android:name="android.service.quicksettings.action.QS_TILE" /></intent-filter>
+        </service>
+        <service
+            android:name=".TileBuscar"
+            android:exported="true"
+            android:label="@string/tile_buscar"
+            android:icon="@drawable/ic_tile_buscar"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter><action android:name="android.service.quicksettings.action.QS_TILE" /></intent-filter>
+        </service>
+
+        <service android:name=".Refresco" android:exported="false" android:permission="android.permission.BIND_JOB_SERVICE" />
+
+        <!-- Widgets (widget/Widgets.kt). -->
+        <receiver android:name=".widget.WidgetLista" android:exported="false" android:label="@string/widget_lista">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_lista" />
+        </receiver>
+        <receiver android:name=".widget.WidgetRapido" android:exported="false" android:label="@string/widget_rapido">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_rapido" />
+        </receiver>
+        <service android:name=".widget.ServicioLista" android:exported="false" android:permission="android.permission.BIND_REMOTEVIEWS" />
+    </application>
+</manifest>

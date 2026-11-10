@@ -1,0 +1,569 @@
+[
+ {
+  "md": "",
+  "canon": "",
+  "estable": true,
+  "title": "",
+  "plain": "",
+  "tags": [],
+  "hasTitle": false
+ },
+ {
+  "md": "# ",
+  "canon": "# ",
+  "estable": true,
+  "title": "",
+  "plain": "",
+  "tags": [],
+  "hasTitle": false
+ },
+ {
+  "md": "Hola",
+  "canon": "Hola",
+  "estable": true,
+  "title": "Hola",
+  "plain": "Hola",
+  "tags": [],
+  "hasTitle": false
+ },
+ {
+  "md": "# Título\n\nUn párrafo.\n\nOtro con\nsalto simple.\n\n---\n\nFin.",
+  "canon": "# Título\n\nUn párrafo.\n\nOtro con\nsalto simple.\n\n---\n\nFin.",
+  "estable": true,
+  "title": "Título",
+  "plain": "Título\n\nUn párrafo.\n\nOtro con\nsalto simple.\n\nFin.",
+  "tags": [],
+  "hasTitle": true
+ },
+ {
+  "md": "## Subtítulo\n\n### Encabezado",
+  "canon": "## Subtítulo\n\n### Encabezado",
+  "estable": true,
+  "title": "Subtítulo",
+  "plain": "Subtítulo\n\nEncabezado",
+  "tags": [],
+  "hasTitle": false
+ },
+ {
+  "md": "#### Cuatro",
+  "canon": "### Cuatro",
+  "estable": true,
+  "title": "Cuatro",
+  "plain": "Cuatro",
+  "tags": [],
+  "hasTitle": false
+ },
+ {
+  "md": "Hola   \n\n\nMundo",
+  "canon": "Hola\n\nMundo",
+  "estable": true,
+  "title": "Hola",
+  "plain": "Hola\n\nMundo",
+  "tags": [],
+  "hasTitle": false
+ },
+ {
+  "md": "- uno\n- dos\n  - dos punto uno\n  - dos punto dos\n- tres",
+  "canon": "- uno\n- dos\n  - dos punto uno\n  - dos punto dos\n- tres",
+  "estable": true,
+  "title": "uno",
+  "plain": "uno\ndos\ndos punto uno\ndos punto dos\ntres",
+  "tags": [],
+  "hasTitle": false
+ },
+ {
+  "md": "1. a\n2. b\n3. c",
+  "canon": "1. a\n2. b\n3. c",
+  "estable": true,
+  "title": "a",
+  "plain": "a\nb\nc",
+  "tags": [],
+  "hasTitle": false
+ },
+ {
+  "md": "3. empieza en tres\n4. sigue",
+  "canon": "3. empieza en tres\n4. sigue",
+  "estable": true,
+  "title": "empieza en tres",
+  "plain": "empieza en tres\nsigue",
+  "tags": [],
+  "hasTitle": false
+ },
+ {
+  "md": "- [ ] pasaporte\n- [x] cargador\n- [ ] equipaje",
+  "canon": "- [ ] pasaporte\n- [x] cargador\n- [ ] equipaje",
+  "estable": true,
+  "title": "pasaporte",
+  "plain": "pasaporte\ncargador\nequipaje",
+  "tags": [],
+  "hasTitle": false
+ },
+ {
+  "md": "- [ ] padre\n  - [x] hijo\n  - [ ] otro hijo",
+  "canon": "- [ ] padre\n  - [x] hijo\n  - [ ] otro hijo",
+  "estable": true,
+  "title": "padre",
+  "plain": "padre\nhijo\notro hijo",
+  "tags": [],
+  "hasTitle": false
+ },
+ {
+  "md": "- elemento con dos párrafos\n\n  segundo párrafo del elemento\n- siguiente",
+  "canon": "- elemento con dos párrafos\n\n  segundo párrafo del elemento\n- siguiente",
+  "estable": true,
+  "title": "elemento con dos párrafos",
+  "plain": "elemento con dos párrafos\n\n  segundo párrafo del elemento\nsiguiente",
+  "tags": [],
+  "hasTitle": false
+ },
+ {
+  "md": "1. paso\n   - detalle\n   - detalle\n2. paso dos",
+  "canon": "1. paso\n   - detalle\n   - detalle\n2. paso dos",
+  "estable": true,
+  "title": "paso",
+  "plain": "paso\ndetalle\ndetalle\npaso dos",
+  "tags": [],
+  "hasTitle": false
+ },
+ {
+  "md": "* a\n+ b",
+  "canon": "- a\n- b",
+  "estable": true,
+  "title": "a",
+  "plain": "a\nb",
+  "tags": [],
+  "hasTitle": false
+ },
+ {
+  "md": "- a\n\n- b",
+  "canon": "- a\n- b",
+  "estable": true,
+  "title": "a",
+  "plain": "a\nb",
+  "tags": [],
+  "hasTitle": false
+ },
+ {
+  "md": "- a\n- b\n\n1. uno\n2. dos\n\n- [ ] c",
+  "canon": "- a\n- b\n\n1. uno\n2. dos\n\n- [ ] c",
+  "estable": true,
+  "title": "a",
+  "plain": "a\nb\n\nuno\ndos\n\nc",
+  "tags": [],
+  "hasTitle": false
+ },
+ {
+  "md": "# T\n\n- uno\n\n\n\ncuerpo",
+  "canon": "# T\n\n- uno\n\n\n\ncuerpo",
+  "estable": true,
+  "title": "T",
+  "plain": "T\n\nuno\n\ncuerpo",
+  "tags": [],
+  "hasTitle": true
+ },
+ {
+  "md": "- [ ] tarea\n\n\n\n\n\ncuerpo",
+  "canon": "- [ ] tarea\n\n\n\n\n\ncuerpo",
+  "estable": true,
+  "title": "tarea",
+  "plain": "tarea\n\ncuerpo",
+  "tags": [],
+  "hasTitle": false
+ },
+ {
+  "md": "\n\nempieza vacío",
+  "canon": "\n\nempieza vacío",
+  "estable": true,
+  "title": "empieza vacío",
+  "plain": "empieza vacío",
+  "tags": [],
+  "hasTitle": false
+ },
+ {
+  "md": "termina\n\n",
+  "canon": "termina\n\n",
+  "estable": true,
+  "title": "termina",
+  "plain": "termina",
+  "tags": [],
+  "hasTitle": false
+ },
+ {
+  "md": "a\n\n\n\nb\n\n\n\nc",
+  "canon": "a\n\n\n\nb\n\n\n\nc",
+  "estable": true,
+  "title": "a",
+  "plain": "a\n\nb\n\nc",
+  "tags": [],
+  "hasTitle": false
+ },
+ {
+  "md": "> una cita\n> de dos líneas",
+  "canon": "> una cita\n> de dos líneas",
+  "estable": true,
+  "title": "una cita",
+  "plain": "una cita\nde dos líneas",
+  "tags": [],
+  "hasTitle": false
+ },
+ {
+  "md": "> cita con lista\n>\n> - a\n> - b",
+  "canon": "> cita con lista\n>\n> - a\n> - b",
+  "estable": true,
+  "title": "cita con lista",
+  "plain": "cita con lista\n\na\nb",
+  "tags": [],
+  "hasTitle": false
+ },
+ {
+  "md": "> uno\n\n> dos",
+  "canon": "> uno\n\n> dos",
+  "estable": true,
+  "title": "uno",
+  "plain": "uno\n\ndos",
+  "tags": [],
+  "hasTitle": false
+ },
+ {
+  "md": "```js\nconst x = **no es negrita**;\n\n# ni título\n```",
+  "canon": "```js\nconst x = **no es negrita**;\n\n# ni título\n```",
+  "estable": true,
+  "title": "const x = **no es negrita**;",
+  "plain": "const x = **no es negrita**;\n\n# ni título",
+  "tags": [],
+  "hasTitle": false
+ },
+ {
+  "md": "```\nsin lenguaje\n```",
+  "canon": "```\nsin lenguaje\n```",
+  "estable": true,
+  "title": "sin lenguaje",
+  "plain": "sin lenguaje",
+  "tags": [],
+  "hasTitle": false
+ },
+ {
+  "md": "```\n```",
+  "canon": "```\n\n```",
+  "estable": true,
+  "title": "",
+  "plain": "",
+  "tags": [],
+  "hasTitle": false
+ },
+ {
+  "md": "antes\n\n```py\nprint(1)\n```\n\ndespués",
+  "canon": "antes\n\n```py\nprint(1)\n```\n\ndespués",
+  "estable": true,
+  "title": "antes",
+  "plain": "antes\n\nprint(1)\n\ndespués",
+  "tags": [],
+  "hasTitle": false
+ },
+ {
+  "md": "![foto](attachments/abc123def456ghi)",
+  "canon": "![foto](attachments/abc123def456ghi)",
+  "estable": true,
+  "title": "foto",
+  "plain": "foto",
+  "tags": [],
+  "hasTitle": false
+ },
+ {
+  "md": "texto\n\n![](attachments/abc123def456ghi)\n\nmás texto",
+  "canon": "texto\n\n![](attachments/abc123def456ghi)\n\nmás texto",
+  "estable": true,
+  "title": "texto",
+  "plain": "texto\n\nmás texto",
+  "tags": [],
+  "hasTitle": false
+ },
+ {
+  "md": "**negrita** *cursiva* ~~tachado~~ ++subrayado++ `código`",
+  "canon": "**negrita** *cursiva* ~~tachado~~ ++subrayado++ `código`",
+  "estable": true,
+  "title": "negrita cursiva tachado subrayado código",
+  "plain": "negrita cursiva tachado subrayado código",
+  "tags": [],
+  "hasTitle": false
+ },
+ {
+  "md": "un [enlace](https://example.com/a_b) y **[otro](https://x.y)**",
+  "canon": "un [enlace](https://example.com/a_b) y [**otro**](https://x.y)",
+  "estable": true,
+  "title": "un enlace y otro",
+  "plain": "un enlace y otro",
+  "tags": [],
+  "hasTitle": false
+ },
+ {
+  "md": "***las dos*** y `a*b*c` y snake_case y 2*3*4",
+  "canon": "**\\*las dos**\\* y `a*b*c` y snake_case y 2\\*3\\*4",
+  "estable": true,
+  "title": "*las dos* y abc y snake_case y 2*3*4",
+  "plain": "*las dos* y abc y snake_case y 2*3*4",
+  "tags": [],
+  "hasTitle": false
+ },
+ {
+  "md": "Ir a [[Otra nota]] y [[nota|con alias]] #viaje #trabajo/cliente (#entre-parentesis)",
+  "canon": "Ir a [[Otra nota]] y [[nota|con alias]] #viaje #trabajo/cliente (#entre-parentesis)",
+  "estable": true,
+  "title": "Ir a Otra nota y con alias #viaje #trabajo/cliente (#entre-parentesis)",
+  "plain": "Ir a Otra nota y con alias #viaje #trabajo/cliente (#entre-parentesis)",
+  "tags": [
+   "viaje",
+   "trabajo/cliente",
+   "entre-parentesis"
+  ],
+  "hasTitle": false
+ },
+ {
+  "md": "\\# no es título",
+  "canon": "\\# no es título",
+  "estable": true,
+  "title": "# no es título",
+  "plain": "# no es título",
+  "tags": [],
+  "hasTitle": false
+ },
+ {
+  "md": "\\- no es lista",
+  "canon": "\\- no es lista",
+  "estable": true,
+  "title": "- no es lista",
+  "plain": "- no es lista",
+  "tags": [],
+  "hasTitle": false
+ },
+ {
+  "md": "1\\. no es lista",
+  "canon": "\\1. no es lista",
+  "estable": false,
+  "title": "\\1. no es lista",
+  "plain": "\\1. no es lista",
+  "tags": [],
+  "hasTitle": false
+ },
+ {
+  "md": "precio: 5\\*3 \\_x\\_ y \\[no enlace\\](x)",
+  "canon": "precio: 5\\*3 \\_x_ y \\[no enlace](x)",
+  "estable": true,
+  "title": "precio: 5*3 _x_ y [no enlace](x)",
+  "plain": "precio: 5*3 _x_ y [no enlace](x)",
+  "tags": [],
+  "hasTitle": false
+ },
+ {
+  "md": "\\> no es cita",
+  "canon": "\\> no es cita",
+  "estable": true,
+  "title": "> no es cita",
+  "plain": "> no es cita",
+  "tags": [],
+  "hasTitle": false
+ },
+ {
+  "md": "barra \\\\ suelta y `código con \\ barra`",
+  "canon": "barra \\\\ suelta y `código con \\ barra`",
+  "estable": true,
+  "title": "barra \\ suelta y código con \\ barra",
+  "plain": "barra \\ suelta y código con \\ barra",
+  "tags": [],
+  "hasTitle": false
+ },
+ {
+  "md": "- [x] hecho con **negrita**\n- [ ] por hacer con `código`\n  1. sub uno\n  2. sub dos\n     - profundo",
+  "canon": "- [x] hecho con **negrita**\n- [ ] por hacer con `código`\n  1. sub uno\n  2. sub dos\n     - profundo",
+  "estable": true,
+  "title": "hecho con negrita",
+  "plain": "hecho con negrita\npor hacer con código\nsub uno\nsub dos\nprofundo",
+  "tags": [],
+  "hasTitle": false
+ },
+ {
+  "md": "- a\n  - b\n    - c\n  - d\n- e",
+  "canon": "- a\n  - b\n    - c\n  - d\n- e",
+  "estable": true,
+  "title": "a",
+  "plain": "a\nb\nc\nd\ne",
+  "tags": [],
+  "hasTitle": false
+ },
+ {
+  "md": "- elemento\n\n  ```\n  código dentro\n  ```\n- otro",
+  "canon": "- elemento\n\n  ```\n  código dentro\n  ```\n- otro",
+  "estable": true,
+  "title": "elemento",
+  "plain": "elemento\n\n  código dentro\notro",
+  "tags": [],
+  "hasTitle": false
+ },
+ {
+  "md": "- elemento\n\n  ![img](attachments/abc123def456ghi)",
+  "canon": "- elemento\n\n  ![img](attachments/abc123def456ghi)",
+  "estable": true,
+  "title": "elemento",
+  "plain": "elemento\n\n  img",
+  "tags": [],
+  "hasTitle": false
+ },
+ {
+  "md": "1. uno\n\n   párrafo dentro\n\n   otro más\n2. dos",
+  "canon": "1. uno\n\n   párrafo dentro\n\n   otro más\n2. dos",
+  "estable": true,
+  "title": "uno",
+  "plain": "uno\n\n   párrafo dentro\n\n   otro más\ndos",
+  "tags": [],
+  "hasTitle": false
+ },
+ {
+  "md": "-\n- b",
+  "canon": "- \n- b",
+  "estable": true,
+  "title": "b",
+  "plain": "b",
+  "tags": [],
+  "hasTitle": false
+ },
+ {
+  "md": "- \n- [ ] \n1. ",
+  "canon": "- \n\n- [ ] \n\n1. ",
+  "estable": true,
+  "title": "",
+  "plain": "",
+  "tags": [],
+  "hasTitle": false
+ },
+ {
+  "md": "# Lista del viaje\n\n- [x] pasaporte\n- [ ] cargador\n\n\n\nTexto del cuerpo con **negrita**, #viaje y [[Otra nota]].\n\n## Enlaces\n\n> Una cita\n\n- [web](https://example.com)\n\n```\ncódigo <b>no html</b>\n```",
+  "canon": "# Lista del viaje\n\n- [x] pasaporte\n- [ ] cargador\n\n\n\nTexto del cuerpo con **negrita**, #viaje y [[Otra nota]].\n\n## Enlaces\n\n> Una cita\n\n- [web](https://example.com)\n\n```\ncódigo <b>no html</b>\n```",
+  "estable": true,
+  "title": "Lista del viaje",
+  "plain": "Lista del viaje\n\npasaporte\ncargador\n\nTexto del cuerpo con negrita, #viaje y Otra nota.\n\nEnlaces\n\nUna cita\n\nweb\n\ncódigo <b>no html</b>",
+  "tags": [
+   "viaje"
+  ],
+  "hasTitle": true
+ },
+ {
+  "md": "Título sin formato\nsegunda línea\n\n- [ ] cosa",
+  "canon": "Título sin formato\nsegunda línea\n\n- [ ] cosa",
+  "estable": true,
+  "title": "Título sin formato",
+  "plain": "Título sin formato\nsegunda línea\n\ncosa",
+  "tags": [],
+  "hasTitle": false
+ },
+ {
+  "md": "# Uno\n# Dos\ntexto pegado\n- lista pegada\n> cita pegada\n---\nfin",
+  "canon": "# Uno\n\n# Dos\n\ntexto pegado\n\n- lista pegada\n\n> cita pegada\n\n---\n\nfin",
+  "estable": true,
+  "title": "Uno",
+  "plain": "Uno\n\nDos\n\ntexto pegado\n\nlista pegada\n\ncita pegada\n\nfin",
+  "tags": [],
+  "hasTitle": true
+ },
+ {
+  "md": "   sangrado raro\n\n\ttab",
+  "canon": "sangrado raro\n\ntab",
+  "estable": true,
+  "title": "sangrado raro",
+  "plain": "sangrado raro\n\ntab",
+  "tags": [],
+  "hasTitle": false
+ },
+ {
+  "md": "línea con dos espacios al final  \nsiguiente",
+  "canon": "línea con dos espacios al final\nsiguiente",
+  "estable": true,
+  "title": "línea con dos espacios al final",
+  "plain": "línea con dos espacios al final\nsiguiente",
+  "tags": [],
+  "hasTitle": false
+ },
+ {
+  "md": "***",
+  "canon": "---",
+  "estable": true,
+  "title": "",
+  "plain": "",
+  "tags": [],
+  "hasTitle": false
+ },
+ {
+  "md": "___",
+  "canon": "---",
+  "estable": true,
+  "title": "",
+  "plain": "",
+  "tags": [],
+  "hasTitle": false
+ },
+ {
+  "md": "- - -",
+  "canon": "- \n  - \n    - ",
+  "estable": true,
+  "title": "",
+  "plain": "",
+  "tags": [],
+  "hasTitle": false
+ },
+ {
+  "md": "+ con más\n\n  continuación",
+  "canon": "- con más\n\n  continuación",
+  "estable": true,
+  "title": "con más",
+  "plain": "con más\n\n  continuación",
+  "tags": [],
+  "hasTitle": false
+ },
+ {
+  "md": "10. diez\n11. once",
+  "canon": "10. diez\n11. once",
+  "estable": true,
+  "title": "diez",
+  "plain": "diez\nonce",
+  "tags": [],
+  "hasTitle": false
+ },
+ {
+  "md": "1) con paréntesis\n2) dos",
+  "canon": "1. con paréntesis\n2. dos",
+  "estable": true,
+  "title": "con paréntesis",
+  "plain": "con paréntesis\ndos",
+  "tags": [],
+  "hasTitle": false
+ },
+ {
+  "md": "> > anidada",
+  "canon": "> > anidada",
+  "estable": true,
+  "title": "> anidada",
+  "plain": "> anidada",
+  "tags": [],
+  "hasTitle": false
+ },
+ {
+  "md": ">sin espacio",
+  "canon": "> sin espacio",
+  "estable": true,
+  "title": "sin espacio",
+  "plain": "sin espacio",
+  "tags": [],
+  "hasTitle": false
+ },
+ {
+  "md": "# Título con #etiqueta y `código`\n\nCuerpo #otra.",
+  "canon": "# Título con #etiqueta y `código`\n\nCuerpo #otra.",
+  "estable": true,
+  "title": "Título con #etiqueta y código",
+  "plain": "Título con #etiqueta y código\n\nCuerpo #otra.",
+  "tags": [
+   "etiqueta",
+   "otra"
+  ],
+  "hasTitle": true
+ }
+]

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Paper Notes</string>
+    <string name="tile_nota">Nota nueva</string>
+    <string name="tile_buscar">Buscar notas</string>
+    <string name="widget_lista">Notas</string>
+    <string name="widget_rapido">Nota rápida</string>
+    <string name="widget_lista_desc">Tus notas fijadas y las más recientes</string>
+    <string name="widget_rapido_desc">Escribe una nota sin abrir la app</string>
+    <string name="atajo_nueva">Nota nueva</string>
+    <string name="atajo_buscar">Buscar</string>
+    <string name="sin_notas">Sin notas todavía</string>
+    <string name="nueva_nota">Nueva nota</string>
+</resources>
