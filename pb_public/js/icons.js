@@ -31,6 +31,11 @@ const I = {
   logout: () => _svg('<path d="M9 4.5H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h3"/><path d="M14 16.5 18.5 12 14 7.5M18.5 12H9"/>'),
   download: () => _svg('<path d="M12 4v11"/><path d="m8 11.5 4 4 4-4"/><path d="M5 18.5h14"/>'),
   upload: () => _svg('<path d="M12 15V4"/><path d="m8 7.5 4-4 4 4"/><path d="M5 18.5h14"/>'),
+  cut: () => _svg('<circle cx="6.5" cy="17.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/><path d="M8.3 15.7 18 4.5M15.7 15.7 6 4.5"/>'),
+  copy: () => _svg('<rect x="8.5" y="8.5" width="11" height="11" rx="2.2"/><path d="M15.5 8.5v-2a2 2 0 0 0-2-2h-7a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h2"/>'),
+  paste: () => _svg('<path d="M9 4.5h6v2.5H9z"/><path d="M15 5.5h2a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-11a2 2 0 0 1 2-2h2"/>'),
+  selectAll: () => _svg('<path d="M5 8V6a1 1 0 0 1 1-1h2M16 5h2a1 1 0 0 1 1 1v2M19 16v2a1 1 0 0 1-1 1h-2M8 19H6a1 1 0 0 1-1-1v-2"/><path d="M9 12h6"/>'),
+  open: () => _svg('<path d="M13.5 4.5h6v6M19.5 4.5 11 13"/><path d="M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4"/>'),
   link: () => _svg('<path d="M10 14a3.5 3.5 0 0 0 5 0l3-3a3.5 3.5 0 0 0-5-5l-1 1"/><path d="M14 10a3.5 3.5 0 0 0-5 0l-3 3a3.5 3.5 0 0 0 5 5l1-1"/>'),
   /* barra de edición */
   image: () => _svg('<rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><circle cx="9" cy="9.5" r="1.6"/><path d="m4.5 17 4.5-4.5 3 3 3-3 4.5 4.5"/>'),

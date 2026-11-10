@@ -23,7 +23,9 @@ const scopeTitle = () => st.view === 'trash' ? 'Eliminadas' : st.folder === null
 
 /* ─── barra lateral (escritorio) ─── */
 function sideHTML() {
-  const row = (key, icon, label, count, on) => `<button class="sd-row${on ? ' on' : ''}" data-act="goFolder" data-arg="${esc(key)}"><span class="sd-ico">${icon}</span><span class="sd-lbl">${esc(label)}</span><span class="sd-cnt">${count || ''}</span></button>`;
+  /* data-drop: acepta notas arrastradas desde la lista (actions.js). «Todo»
+     no es una carpeta: no acepta. */
+  const row = (key, icon, label, count, on) => `<button class="sd-row${on ? ' on' : ''}" data-act="goFolder" data-arg="${esc(key)}"${key !== 'all' ? ` data-drop="${esc(key)}"` : ''}><span class="sd-ico">${icon}</span><span class="sd-lbl">${esc(label)}</span><span class="sd-cnt">${count || ''}</span></button>`;
   let h = `<div class="sd-brand">Notas</div>
   <div class="sd-search">${I.search()}<input id="q" placeholder="Buscar" value="${esc(st.q)}" autocomplete="off" enterkeyhint="search"></div>
   <div class="sd-scroll">`;
@@ -40,7 +42,7 @@ function sideHTML() {
   return h;
 }
 function folderRowsHTML(parent, depth) {
-  return folderChildren(parent).map(f => `<button class="sd-row sd-f${st.view !== 'trash' && st.folder === f.id ? ' on' : ''}" style="--d:${depth}" data-act="goFolder" data-arg="${f.id}" data-folder="${f.id}"><span class="sd-ico">${st.folder === f.id ? I.folderOpen() : I.folder()}</span><span class="sd-lbl">${esc(f.name)}</span><span class="sd-cnt">${folderCount(f.id) || ''}</span></button>` + folderRowsHTML(f.id, depth + 1)).join('');
+  return folderChildren(parent).map(f => `<button class="sd-row sd-f${st.view !== 'trash' && st.folder === f.id ? ' on' : ''}" style="--d:${depth}" data-act="goFolder" data-arg="${f.id}" data-folder="${f.id}" data-drop="${f.id}"><span class="sd-ico">${st.folder === f.id ? I.folderOpen() : I.folder()}</span><span class="sd-lbl">${esc(f.name)}</span><span class="sd-cnt">${folderCount(f.id) || ''}</span></button>` + folderRowsHTML(f.id, depth + 1)).join('');
 }
 
 /* ─── cabeceras ─── */
@@ -76,12 +78,13 @@ function noteHeadHTML() {
 function cardHTML(n, remote) {
   const cover = coverOf(n);
   const ex = remote && remote.fragment ? remote.fragment : excerptOf(n);
-  return `<article class="card${n.pinned ? ' pinned' : ''}" data-act="open" data-arg="${n.id}" data-note="${n.id}">
-    ${cover ? `<div class="card-cover"><img src="${esc(attUrl(cover, '800x0'))}" alt="" loading="lazy"></div>` : ''}
+  /* draggable: se arrastra a una carpeta de la barra lateral (solo escritorio). */
+  return `<article class="card${n.pinned ? ' pinned' : ''}" data-act="open" data-arg="${n.id}" data-note="${n.id}"${isDesktop() ? ' draggable="true"' : ''}>
+    ${cover ? `<div class="card-cover"><img src="${esc(attUrl(cover, '800x0'))}" alt="" loading="lazy" draggable="false"></div>` : ''}
     <div class="card-body">
       <div class="card-title">${esc(n.title) || '<span class="muted">Sin título</span>'}</div>
       <div class="card-ex">${ex ? esc(ex) : '<span class="muted">Sin texto</span>'}</div>
-      <div class="card-meta">${n.pinned ? `<span class="card-pin">${I.pin()}</span>` : ''}${esc(niceDate(n.updated))}${n.folder && st.folder === null ? ` · ${esc((folderById(n.folder) || {}).name || '')}` : ''}</div>
+      <div class="card-meta">${n.pinned ? `<span class="card-pin">${I.pin()}</span>` : ''}${n.share ? `<span class="card-pin card-shared" title="Compartida por enlace">${I.link()}</span>` : ''}${esc(niceDate(n.updated))}${n.folder && st.folder === null ? ` · ${esc((folderById(n.folder) || {}).name || '')}` : ''}</div>
     </div></article>`;
 }
 function listHTML() {
@@ -132,7 +135,7 @@ function noteMetaHTML(n) {
   const f = n.folder ? folderById(n.folder) : null;
   return `<div id="note-meta" class="note-meta">
     <button class="chip chip-folder" data-act="moveNote" data-arg="${n.id}">${I.folder()} ${esc(f ? f.name : 'Notas')}</button>
-    <div class="note-date">${esc(niceDate(n.updated, true))} · ${charCount(n)} caracteres${n.pinned ? ' · fijada' : ''}</div>
+    <div class="note-date">${esc(niceDate(n.updated, true))} · ${charCount(n)} caracteres${n.pinned ? ' · fijada' : ''}${n.share ? ' · <button class="note-shared" data-act="shareLink" data-arg="' + n.id + '">compartida por enlace</button>' : ''}</div>
   </div>`;
 }
 /* La barra de formato (HyperOS: una fila, scroll horizontal, grupos, X al

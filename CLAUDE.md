@@ -26,7 +26,10 @@ del servidor (ignorado); los datos del despliegue, fuera del repo.
   (`<timestamp>_<nombre>.js`), se prueba en local y se despliega.
 - **Hooks** (`pb_hooks/`, JS sobre goja): `notes.pb.js` pone el dueño,
   deriva `title`/`plain`/`tags`/`links` del `body`, lleva `version` y
-  conflictos, y vacía la papelera. Lo compartido entre handlers va en
+  conflictos, y vacía la papelera. `share.pb.js` sirve las notas
+  compartidas: `/shared/<token>` (página `pb_public/shared.html` +
+  `js/shared.js`, sin login ni SW) y `/api/shared/<token>` (título, cuerpo,
+  URLs de sus imágenes; nada si está en la papelera). Lo compartido entre handlers va en
   `notes_lib.js` porque **cada handler corre en un runtime aparte y no ve
   las funciones del nivel superior del archivo**.
 - **Caddy** (`caddy/Caddyfile`): comprime, pone `Cache-Control` y separa las
@@ -44,7 +47,10 @@ del servidor (ignorado); los datos del despliegue, fuera del repo.
   ProseMirror: `editorOpen/editorMarkdown/editorSet/editorCmd/editorState`),
   `render.js` (HTML de cada vista + `paint()` con morph), `actions.js`
   (handler delegado `data-act`, autoguardado con debounce de 800 ms y
-  guardado inmediato al salir, menús, modales), `boot.js`.
+  guardado inmediato al salir, menús, modales, arrastrar tarjetas a las
+  carpetas de la barra lateral con `data-drop`, y el menú contextual propio:
+  clic derecho = menú de la app; Shift+clic derecho y los campos de texto
+  dejan el del navegador), `boot.js`.
   Con una nota abierta `paint()` NO repinta `#content` (ahí vive el editor).
   **ProseMirror** se reconstruye con `scripts/vendor-prosemirror.sh`
   (esbuild, IIFE global `PM`); es la única vendorización con build.
@@ -95,6 +101,12 @@ del servidor (ignorado); los datos del despliegue, fuera del repo.
   (`reason=conflict`) y la respuesta lleva `X-Note-Conflict: <versión>`.
   Cambios que no tocan `body` (mover, fijar, papelera) no suben `version`.
 - Papelera: `trashed_at`; el cron `papelera` borra de verdad a los 30 días.
+- Compartir: `notes.share` = token aleatorio (128 bits, base64url) que pone
+  el cliente; vacío = no compartida. La nota se lee sin cuenta en
+  `notes.samukis.xyz/shared/<token>`. No sube `version`.
+- Párrafos vacíos: en el Markdown, cada línea vacía que el usuario deja con
+  Enter son dos líneas en blanco de más (`mdpm.js`); así sobreviven al
+  guardar. Una sola línea en blanco sigue siendo la separación normal.
 - `folders.parent` es autorreferencia (carpetas anidadas, cascada al borrar).
 - `attachments.kind = ink` queda reservado para trazos de lápiz.
 

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Nota compartida</title>
+<link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
+<meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1E1E21" media="(prefers-color-scheme: dark)">
+<!-- La sirve pb_hooks/share.pb.js en /shared/<token>. Solo lee: ni login,
+     ni editor, ni service worker. Mismos ?v= que index.html. -->
+<link rel="stylesheet" href="/styles.css?v=6">
+</head>
+<body class="shared-body">
+<main class="shared">
+  <article id="sh-note" class="ed sh-ed" aria-live="polite"><p class="muted">Cargando…</p></article>
+  <footer class="sh-foot">
+    <span id="sh-date"></span>
+    <span class="sh-ro">Solo lectura</span>
+  </footer>
+</main>
+<script src="/js/mdpm.js?v=6"></script>
+<script src="/js/shared.js?v=6"></script>
+</body>
+</html>

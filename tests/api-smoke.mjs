@@ -106,9 +106,24 @@ const delF = await api(`/api/collections/folders/records/${f1.json.id}`, { metho
 const afterF = await api(`/api/collections/notes/records/${n1.json.id}`, { token: A.token });
 ok(delF.status === 204 && afterF.status === 200 && !afterF.json.folder, 'borrar la carpeta padre borra la hija y la nota vuelve a la raíz');
 
+// 7b. compartir por enlace (solo lectura, sin cuenta)
+const tok = 'smokeShareToken_' + Math.random().toString(36).slice(2, 12);
+const sh0 = await api(`/api/shared/${tok}`);
+ok(sh0.status === 404, `token desconocido → 404 (${sh0.status})`);
+const shSet = await api(`/api/collections/notes/records/${n1.json.id}`, { method: 'PATCH', token: A.token, body: { share: tok } });
+ok(shSet.status === 200 && shSet.json.share === tok && shSet.json.version === afterF.json.version, `A comparte su nota sin subir versión (${shSet.status})`);
+const sh1 = await api(`/api/shared/${tok}`);
+ok(sh1.status === 200 && sh1.json.body === afterF.json.body && sh1.json.owner === undefined, `anónimo lee la nota compartida y nada más (${sh1.status})`);
+const shPage = await fetch(`${BASE}/shared/${tok}`);
+ok(shPage.status === 200 && (await shPage.text()).includes('shared.js'), `/shared/<token> sirve la página (${shPage.status})`);
+const shBad = await api(`/api/collections/notes/records/${n1.json.id}`, { method: 'PATCH', token: A.token, body: { share: 'con espacios / raros' } });
+ok(shBad.status === 400, `token con caracteres raros rechazado (${shBad.status})`);
+
 // 8. papelera y usuarios
 const tr = await api(`/api/collections/notes/records/${n1.json.id}`, { method: 'PATCH', token: A.token, body: { trashed_at: new Date().toISOString() } });
 ok(tr.status === 200 && tr.json.trashed_at, 'a papelera (trashed_at)');
+const sh2 = await api(`/api/shared/${tok}`);
+ok(sh2.status === 404, `en la papelera deja de verse compartida (${sh2.status})`);
 const uB = await api(`/api/collections/users/records/${A.id}`, { token: B.token });
 ok(uB.status === 404, `B no ve el perfil de A (${uB.status})`);
 const st = await api(`/api/collections/users/records/${A.id}`, { method: 'PATCH', token: A.token, body: { settings: { autoTitle: false } } });

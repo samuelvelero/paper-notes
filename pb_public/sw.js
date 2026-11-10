@@ -57,7 +57,8 @@ self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
   if (e.request.method !== 'GET') return;
   if (url.origin !== self.location.origin) return;
-  if (/^\/(api|search|mcp|_)(\/|$)/.test(url.pathname)) return;
+  /* /shared/<token> es la página pública de solo lectura, no la app. */
+  if (/^\/(api|search|mcp|shared|_)(\/|$)/.test(url.pathname)) return;
   if (e.request.mode === 'navigate') { e.respondWith(handleNavigate(e)); return; }
   if (url.searchParams.has('v')) {
     e.respondWith(caches.match(e.request).then(m => m || fetch(e.request).then(res => { const copy = res.clone(); caches.open(CACHE).then(c => c.put(e.request, copy)).catch(() => {}); return res; })));

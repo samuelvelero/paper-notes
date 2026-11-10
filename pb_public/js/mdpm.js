@@ -87,13 +87,19 @@
     return { type: 'doc', content: content.length ? content : [{ type: 'paragraph' }] };
   }
 
+  /* Líneas en blanco de más = párrafos vacíos (la separación que el usuario
+     dejó con Enter). Entre dos bloques la separación normal es UNA línea en
+     blanco y cada párrafo vacío suma dos (ver serialize): k = (L-1)/2. Al
+     principio y al final no hay separación normal: k = L/2. */
   function parseBlocks(lines) {
     const out = [];
-    let i = 0;
+    let i = 0, blanks = 0;
+    const empties = n => { for (let k = 0; k < n; k++) out.push({ type: 'paragraph' }); };
     while (i < lines.length) {
       const line = lines[i];
       let m;
-      if (isBlank(line)) { i++; continue; }
+      if (isBlank(line)) { blanks++; i++; continue; }
+      if (blanks) { empties(out.length ? Math.floor((blanks - 1) / 2) : Math.floor(blanks / 2)); blanks = 0; }
       if ((m = RE.fence.exec(line))) {
         const lang = m[1].trim();
         const buf = [];
@@ -128,6 +134,7 @@
       while (i < lines.length && !isBlank(lines[i]) && !startsBlock(lines[i])) buf.push(lines[i++]);
       out.push({ type: 'paragraph', content: inlineLines(buf) });
     }
+    if (blanks && out.length) empties(Math.floor(blanks / 2));
     return out;
   }
 
@@ -268,20 +275,33 @@
   /* ─── Serializer ─── */
   const BLOCKISH = [/^ {0,3}#{1,6}\s/, /^ {0,3}(?:[-*+]|\d{1,9}[.)])\s/, /^ {0,3}>/, /^ {0,3}```/, /^ {0,3}(?:-{3,}|\*{3,}|_{3,})\s*$/, /^ {0,3}!\[/];
 
+  /* Un párrafo vacío sale como cadena vacía: al unir con "\n\n" suma dos
+     líneas en blanco y parseBlocks lo recupera. Los saltos (Shift+Enter) al
+     principio o al final de un párrafo, o dos seguidos en medio, también se
+     ven como líneas vacías: se guardan igual, como párrafos vacíos. */
   function serialize(doc) {
-    return blocks(doc.content || []).join('\n\n').replace(/\n{3,}/g, '\n\n');
+    const list = doc.content || [];
+    if (list.length === 1 && list[0].type === 'paragraph' && !(list[0].content || []).length) return '';
+    return blocks(list).join('\n\n');
   }
   function blocks(list) {
     const out = [];
-    for (const n of list) out.push(block(n));
+    for (const n of list) {
+      if (n.type !== 'paragraph') { out.push(block(n)); continue; }
+      const t = inlineOut(n.content || []);
+      const lead = /^\n*/.exec(t)[0].length, trail = /\n*$/.exec(t)[0].length;
+      if (lead === t.length) { for (let k = 0; k < Math.max(1, t.length); k++) out.push(''); continue; }
+      for (let k = 0; k < lead; k++) out.push('');
+      t.slice(lead, t.length - trail).split(/(\n{2,})/).forEach((part, k) => {
+        if (k % 2) { for (let j = 1; j < part.length; j++) out.push(''); } else out.push(escapeBlock(part));
+      });
+      for (let k = 0; k < trail; k++) out.push('');
+    }
     return out;
   }
   function block(n) {
     switch (n.type) {
-      case 'paragraph': {
-        const t = inlineOut(n.content || []);
-        return BLOCKISH.some(r => r.test(t)) ? '\\' + t.replace(/^ +/, '') : t;
-      }
+      case 'paragraph': return escapeBlock(inlineOut(n.content || []));
       case 'heading': return '#'.repeat(n.attrs && n.attrs.level || 1) + ' ' + inlineOut(n.content || []).replace(/\n/g, ' ');
       case 'blockquote': return blocks(n.content || []).join('\n\n').split('\n').map(l => (l ? '> ' + l : '>')).join('\n');
       case 'code_block': {
@@ -299,6 +319,8 @@
       default: return inlineOut(n.content || []);
     }
   }
+  /* Un párrafo que empezaría por sintaxis de bloque se escapa con `\`. */
+  const escapeBlock = t => (BLOCKISH.some(r => r.test(t)) ? '\\' + t.replace(/^ +/, '') : t);
   const LISTS = ['bullet_list', 'ordered_list', 'todo_list'];
   function listOut(items, marker, indent) {
     const pad = ' '.repeat(indent);

@@ -24,7 +24,7 @@ test('bloques básicos: título, párrafos, saltos, separador', () => {
   same('# Título\n\nUn párrafo.\n\nOtro con\nsalto simple.\n\n---\n\nFin.');
   same('## Subtítulo\n\n### Encabezado');
   assert.deepStrictEqual(MDPM.parse('').content, [{ type: 'paragraph' }]);
-  assert.strictEqual(roundtrip('Hola   \n\n\n\nMundo'), 'Hola\n\nMundo', 'normaliza blancos');
+  assert.strictEqual(roundtrip('Hola   \n\n\nMundo'), 'Hola\n\nMundo', 'dos líneas en blanco son la separación normal');
   assert.strictEqual(roundtrip('#### Cuatro'), '### Cuatro', 'h4+ se queda en 3 niveles');
 });
 
@@ -38,6 +38,23 @@ test('listas: viñetas, numeradas, to-do, anidadas y con varios bloques', () => 
   same('1. paso\n   - detalle\n   - detalle\n2. paso dos');
   assert.strictEqual(roundtrip('* a\n+ b'), '- a\n- b', 'otros marcadores se normalizan a -');
   assert.strictEqual(roundtrip('- a\n\n- b'), '- a\n- b', 'una línea en blanco entre elementos no parte la lista');
+});
+
+test('líneas vacías (párrafos vacíos) sobreviven al guardar', () => {
+  /* Enter tras una lista deja párrafos vacíos como separación: tienen que
+     volver al reabrir la nota. */
+  same('# T\n\n- uno\n\n\n\ncuerpo', 'un párrafo vacío tras una lista');
+  same('- [ ] tarea\n\n\n\n\n\ncuerpo', 'dos párrafos vacíos tras un to-do');
+  same('\n\nempieza vacío', 'párrafo vacío al principio');
+  same('termina\n\n', 'párrafo vacío al final');
+  const doc = { type: 'doc', content: [
+    { type: 'paragraph', content: [{ type: 'text', text: 'a' }] },
+    { type: 'paragraph', content: [{ type: 'hard_break' }, { type: 'text', text: 'b' }, { type: 'hard_break' }, { type: 'hard_break' }, { type: 'text', text: 'c' }] },
+  ] };
+  const md = MDPM.serialize(doc);
+  assert.strictEqual(md, 'a\n\n\n\nb\n\n\n\nc', 'Shift+Enter al principio o doble cuenta como línea vacía');
+  assert.strictEqual(roundtrip(md), md);
+  assert.strictEqual(MDPM.serialize({ type: 'doc', content: [{ type: 'paragraph' }] }), '');
 });
 
 test('cita, código, imagen', () => {

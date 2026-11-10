@@ -63,13 +63,13 @@ function applyAccountSettings(s) {
 /* ─── mapeo registro ↔ objeto local ─── */
 const fromRec = {
   notes: r => ({ id: r.id, folder: r.folder || '', body: r.body || '', title: r.title || '', plain: r.plain || '', tags: r.tags || [], links: r.links || [],
-    pinned: !!r.pinned, trashed_at: r.trashed_at || '', version: r.version || 0, created: r.created, updated: r.updated, client_updated: r.client_updated || '', device: r.device || '' }),
+    pinned: !!r.pinned, trashed_at: r.trashed_at || '', version: r.version || 0, created: r.created, updated: r.updated, client_updated: r.client_updated || '', device: r.device || '', share: r.share || '' }),
   folders: r => ({ id: r.id, name: r.name || '', parent: r.parent || '', order: r.order || '', icon: r.icon || '' }),
   attachments: r => ({ id: r.id, note: r.note || '', file: r.file || '', kind: r.kind || 'image', width: r.width || 0, height: r.height || 0 }),
 };
 /* Solo lo que el cliente escribe: los derivados los pone el hook. */
 const toRec = {
-  notes: n => ({ folder: n.folder || '', body: n.body, pinned: !!n.pinned, trashed_at: n.trashed_at || '', client_updated: n.client_updated || new Date().toISOString(), device: 'web' }),
+  notes: n => ({ folder: n.folder || '', body: n.body, pinned: !!n.pinned, trashed_at: n.trashed_at || '', share: n.share || '', client_updated: n.client_updated || new Date().toISOString(), device: 'web' }),
   folders: f => ({ name: f.name, parent: f.parent || '', order: f.order || '', icon: f.icon || '' }),
 };
 const colArr = kind => kind === 'notes' ? notes : kind === 'folders' ? folders : attachments;
@@ -254,7 +254,9 @@ function schedulePaint() {
   if (ae && (/INPUT|TEXTAREA/.test(ae.tagName) || ae.isContentEditable)) {
     if (_paintPend) return;
     _paintPend = true;
-    ae.addEventListener('blur', () => { _paintPend = false; paint(); }, { once: true });
+    /* Fuera del blur: si el blur lo dispara destruir el editor (cerrar la
+       nota), repintar ahí dentro le quita los nodos a ProseMirror a medias. */
+    ae.addEventListener('blur', () => { setTimeout(() => { _paintPend = false; paint(); }, 0); }, { once: true });
   } else paint();
 }
 

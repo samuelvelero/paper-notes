@@ -141,9 +141,15 @@ input,select{ font:inherit; }
 .ed-host{ min-height:50vh; }
 .ed{ outline:0; font-size:var(--ed-size); line-height:1.55; caret-color:var(--accent); word-wrap:break-word; white-space:pre-wrap; min-height:50vh; padding-bottom:30vh; }
 .ed::selection, .ed *::selection{ background:rgba(255,179,0,.35); }
-.ed h1{ font-size:32px; font-weight:500; line-height:1.2; margin:0 0 12px; letter-spacing:-.01em; }
-.ed h2{ font-size:24px; font-weight:500; line-height:1.25; margin:18px 0 8px; }
-.ed h3{ font-size:19px; font-weight:600; line-height:1.3; margin:16px 0 6px; }
+/* Títulos: tamaño relativo a la fuente del editor (Ajustes → tamaño) y
+   márgenes en `em`, o sea proporcionales al propio título: un H1 en medio de
+   la nota empuja el texto tanto como mide, y H1/H2/H3 guardan la misma
+   proporción de aire. El primero de la nota no lleva margen arriba. */
+.ed h1,.ed h2,.ed h3{ line-height:1.22; margin:.85em 0 .3em; }
+.ed h1{ font-size:calc(var(--ed-size) * 1.88); font-weight:500; letter-spacing:-.01em; }
+.ed h2{ font-size:calc(var(--ed-size) * 1.41); font-weight:500; }
+.ed h3{ font-size:calc(var(--ed-size) * 1.12); font-weight:600; }
+.ed > :first-child{ margin-top:0; }
 .ed p{ margin:0 0 .35em; }
 .ed p:empty::before, .ed h1:empty::before, .ed h2:empty::before, .ed h3:empty::before{ content:'\200b'; }
 .ed h1:first-child:empty::before{ content:'Título'; color:var(--muted); }
@@ -250,6 +256,35 @@ input,select{ font:inherit; }
 .md-row{ display:flex; align-items:center; gap:10px; height:46px; padding:0 10px 0 calc(10px + var(--d,0) * 16px); border-radius:12px; font-size:15px; text-align:left; }
 .md-row:hover{ background:var(--surface-2); } .md-row.on{ background:var(--accent-soft); }
 .md-row .fcard-chk{ margin-left:auto; }
+.scrim.clear{ background:transparent; }
+.pop-sep{ height:1px; background:var(--hair); margin:4px 8px; flex:none; }
+.pop-row:disabled{ opacity:.38; cursor:default; } .pop-row:disabled:hover{ background:none; }
+.pop-row span{ flex:1; }
+.pop-kbd{ font:inherit; font-size:12px; color:var(--muted); }
+.btn.danger{ color:var(--danger); background:none; padding:0 6px; }
+.md-acts-gap{ flex:1; }
+.share-url{ font-size:14px; color:var(--text-2); text-overflow:ellipsis; }
+.share-off{ font-size:13px; margin:10px 0 0; }
+.share-acts{ flex-wrap:wrap; }
+.note-shared{ color:var(--muted); font-size:inherit; text-decoration:underline; text-decoration-color:var(--hair-2); text-underline-offset:2px; }
+.note-shared:hover{ color:var(--text-2); }
+.card-shared svg{ color:var(--muted); }
+
+/* ============ Arrastrar notas a carpetas ============ */
+.card[draggable="true"]{ -webkit-user-drag:element; }
+.card.dragging{ opacity:.45; }
+body.dragging-note .sd-row[data-drop]{ transition:background .1s, box-shadow .1s; }
+.sd-row.drop-on{ background:var(--accent-soft); color:var(--text); box-shadow:inset 0 0 0 1.5px var(--accent); }
+.sd-row.drop-on .sd-ico{ color:var(--accent); }
+
+/* ============ Nota compartida (/shared/<token>, solo lectura) ============ */
+.shared-body{ background:var(--surface); }
+.shared{ max-width:760px; margin:0 auto; padding:calc(28px + var(--safe-t)) var(--gutter) calc(40px + var(--safe-b)); }
+.sh-ed{ min-height:0; padding-bottom:0; caret-color:auto; }
+.sh-ed .todo-box{ cursor:default; }
+.sh-nolink{ cursor:default; }
+.sh-gone{ color:var(--muted); text-align:center; padding:60px 0; }
+.sh-foot{ display:flex; justify-content:space-between; gap:12px; margin-top:36px; padding-top:14px; border-top:1px solid var(--hair); color:var(--muted); font-size:13px; }
 
 /* ============ Red, avisos, login ============ */
 #netbar{ position:fixed; left:50%; transform:translateX(-50%); bottom:calc(96px + var(--safe-b)); z-index:45; display:none; background:#C62828; color:#fff; font-size:13px; padding:7px 14px; border-radius:999px; box-shadow:0 4px 14px rgba(0,0,0,.2); max-width:90vw; text-align:center; }

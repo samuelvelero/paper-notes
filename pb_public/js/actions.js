@@ -125,9 +125,10 @@ function newFolder(parent) {
     st.folder = f.id; st.view = 'list'; paint();
   });
 }
-function folderMenu(id, anchor) {
-  const f = folderById(id); if (!f) return;
-  openPop(anchor, [
+function folderMenu(id, anchor) { const items = folderMenuItems(id); if (items) openPop(anchor, items); }
+function folderMenuItems(id) {
+  const f = folderById(id); if (!f) return null;
+  return [
     { label: 'Renombrar', icon: I.text(), run: () => promptFolder('Renombrar carpeta', f.name, name => { f.name = name; queueSave('folders', f); paint(); }) },
     { label: 'Nueva subcarpeta', icon: I.plus(), run: () => newFolder(f.id) },
     { label: 'Mover las notas a Notas y borrar', icon: I.trash(), danger: true, run: () => confirmModal(`¿Borrar la carpeta «${f.name}»?`, 'Sus notas (y las de sus subcarpetas) pasan a «Notas». No se borra ninguna nota.', () => {
@@ -137,27 +138,47 @@ function folderMenu(id, anchor) {
       if (ids.includes(st.folder)) st.folder = null;
       paint();
     }) },
-  ]);
+  ];
+}
+/* Mover una nota a una carpeta ('' = «Notas», la raíz), con deshacer. */
+function moveNoteTo(id, folder) {
+  const n = noteById(id); if (!n) return;
+  folder = folder || '';
+  if ((n.folder || '') === folder) return;
+  if (st.noteId === id) flushSave();
+  const prev = n.folder || '';
+  n.folder = folder; queueSave('notes', n); paint();
+  const name = folder ? ((folderById(folder) || {}).name || 'la carpeta') : 'Notas';
+  toast(`Movida a «${name}»`, { action: 'Deshacer', onAction: () => { n.folder = prev; queueSave('notes', n); paint(); } });
 }
 function moveNoteModal(id) {
   const n = noteById(id); if (!n) return;
   const rows = [['', 'Notas', 0]];
   const rec = (parent, depth) => folderChildren(parent).forEach(f => { rows.push([f.id, f.name, depth]); rec(f.id, depth + 1); });
   rec('', 0);
+  st.moveId = id;   // la nota que se mueve (puede no ser la abierta: menú de la tarjeta)
   openModal(`<div class="md-title">Mover a</div><div class="md-list">${rows.map(([fid, name, d]) => `<button class="md-row${(n.folder || '') === fid ? ' on' : ''}" style="--d:${d}" data-act="moveTo" data-arg="${fid}"><span class="sd-ico">${I.folder()}</span>${esc(name)}<span class="fcard-chk">${(n.folder || '') === fid ? I.check() : ''}</span></button>`).join('')}
     <button class="md-row" data-act="newFolderFromMove"><span class="sd-ico">${I.plus()}</span>Nueva carpeta</button></div>`);
 }
 
 /* ─── menú de la nota ─── */
-function noteMenu(anchor) {
-  const n = noteById(st.noteId); if (!n) return;
-  openPop(anchor, [
+function noteMenu(anchor) { const items = noteMenuItems(st.noteId); if (items) openPop(anchor, items); }
+/* Las acciones de una nota: las usan el ⋮ de la nota abierta y el clic
+   derecho en su tarjeta (`withOpen` añade «Abrir»). */
+function noteMenuItems(id, withOpen) {
+  const n = noteById(id); if (!n) return null;
+  const items = [];
+  if (withOpen) items.push({ label: 'Abrir', icon: I.open(), run: () => openNote(n.id) }, { sep: true });
+  items.push(
     { label: n.pinned ? 'Desfijar' : 'Fijar', icon: n.pinned ? I.pinOff() : I.pin(), run: () => { n.pinned = !n.pinned; queueSave('notes', n); paint(); toast(n.pinned ? 'Nota fijada' : 'Nota desfijada'); } },
     { label: 'Mover a…', icon: I.move(), run: () => moveNoteModal(n.id) },
+    { label: n.share ? 'Enlace público…' : 'Compartir enlace público', icon: I.link(), run: () => shareLink(n.id) },
     { label: 'Historial de versiones', icon: I.history(), run: () => openHistory(n.id) },
-    { label: 'Copiar como Markdown', icon: I.code(), run: () => { flushSave(); navigator.clipboard && navigator.clipboard.writeText(n.body).then(() => toast('Markdown copiado')); } },
+    { label: 'Copiar como Markdown', icon: I.code(), run: () => { if (st.noteId === n.id) flushSave(); navigator.clipboard && navigator.clipboard.writeText(n.body).then(() => toast('Markdown copiado')); } },
+    { sep: true },
     { label: 'Mover a la papelera', icon: I.trash(), danger: true, run: () => trashNote(n.id) },
-  ]);
+  );
+  return items;
 }
 function trashNote(id) {
   const n = noteById(id); if (!n) return;
@@ -168,12 +189,63 @@ function trashNote(id) {
   paint();
   toast('Nota en la papelera', { action: 'Deshacer', onAction: () => { n.trashed_at = ''; queueSave('notes', n); paint(); } });
 }
-function shareNote() {
-  const n = noteById(st.noteId); if (!n) return;
-  flushSave();
+/* ─── compartir ───
+   Dos maneras: el ENLACE PÚBLICO de solo lectura (notes.share = token,
+   la página /shared/<token> la sirve pb_hooks/share.pb.js) o mandar el texto
+   tal cual con el menú de compartir del sistema. */
+const PUBLIC_ORIGIN = 'https://notes.samukis.xyz';
+/* En local (pruebas) el enlace apunta al propio servidor; desde la tailnet o
+   el dominio, siempre al público: es el que puede abrir un tercero. */
+const shareUrl = token => (/^(localhost|127\.|\[::1\])/.test(location.hostname) ? location.origin : PUBLIC_ORIGIN) + '/shared/' + token;
+function newShareToken() {
+  const b = new Uint8Array(16); crypto.getRandomValues(b);
+  return btoa(String.fromCharCode(...b)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+function shareMenu(id, anchor) {
+  const n = noteById(id); if (!n) return;
+  openPop(anchor, [
+    { label: n.share ? 'Enlace público…' : 'Compartir enlace público', icon: I.link(), run: () => shareLink(n.id) },
+    { label: navigator.share ? 'Enviar el texto…' : 'Copiar el texto', icon: I.share(), run: () => shareText(n.id) },
+    { label: 'Copiar como Markdown', icon: I.code(), run: () => { if (st.noteId === n.id) flushSave(); navigator.clipboard && navigator.clipboard.writeText(n.body).then(() => toast('Markdown copiado')); } },
+  ]);
+}
+function shareText(id) {
+  const n = noteById(id); if (!n) return;
+  if (st.noteId === id) flushSave();
   const text = n.plain || '';
   if (navigator.share) navigator.share({ title: n.title || 'Nota', text }).catch(() => {});
   else if (navigator.clipboard) navigator.clipboard.writeText(text).then(() => toast('Texto copiado'));
+}
+/* Crea el enlace si no lo hay y enseña el diálogo (copiar / dejar de compartir). */
+function shareLink(id) {
+  const n = noteById(id); if (!n) return;
+  if (st.noteId === id) flushSave();
+  const isNew = !n.share;
+  if (isNew) { n.share = newShareToken(); queueSave('notes', n, { now: true }); paint(); }
+  const url = shareUrl(n.share);
+  openModal(`<div class="md-title">Enlace público</div>
+    <p class="md-text">Cualquiera con el enlace puede leer esta nota, sin cuenta. No puede editarla ni ver tus otras notas. Los cambios que hagas se ven al recargar.</p>
+    <input class="md-input share-url" readonly value="${esc(url)}" onclick="this.select()">
+    ${!navigator.onLine ? '<p class="md-text share-off">Sin conexión: el enlace funcionará cuando se suba el cambio.</p>' : ''}
+    <div class="md-acts share-acts">
+      <button class="btn danger" data-act="shareStop" data-arg="${n.id}">Dejar de compartir</button>
+      <span class="md-acts-gap"></span>
+      ${navigator.share ? `<button class="btn" data-act="shareSend" data-arg="${n.id}">Enviar…</button>` : ''}
+      <button class="btn primary" data-act="shareCopy" data-arg="${n.id}">Copiar enlace</button>
+    </div>`);
+  if (isNew) copyShareLink(n.id, true);
+}
+function copyShareLink(id, quiet) {
+  const n = noteById(id); if (!n || !n.share) return;
+  const url = shareUrl(n.share);
+  if (navigator.clipboard) navigator.clipboard.writeText(url).then(() => toast(quiet ? 'Enlace creado y copiado' : 'Enlace copiado'), () => { if (!quiet) toast('No pude copiar: selecciona el enlace'); });
+}
+function stopSharing(id) {
+  const n = noteById(id); if (!n) return;
+  closeModal();
+  const prev = n.share;
+  n.share = ''; queueSave('notes', n, { now: true }); paint();
+  toast('El enlace dejó de funcionar', { action: 'Deshacer', onAction: () => { n.share = prev; queueSave('notes', n, { now: true }); paint(); } });
 }
 
 /* ─── historial ─── */
@@ -222,27 +294,189 @@ async function remoteSearch() {
 }
 
 /* ─── menús y modales ─── */
+/* `anchor`: un elemento (el menú cae bajo él, alineado a su derecha) o un
+   punto {x, y} (clic derecho: el menú sale desde el puntero). Items:
+   { label, icon, run, danger, hint } o { sep: true }. */
 function openPop(anchor, items) {
   const pop = document.getElementById('pop');
-  pop.innerHTML = items.map((it, i) => `<button class="pop-row${it.danger ? ' danger' : ''}" data-pop="${i}">${it.icon || ''}<span>${esc(it.label)}</span></button>`).join('');
+  pop.innerHTML = items.map((it, i) => it.sep ? '<div class="pop-sep"></div>'
+    : `<button class="pop-row${it.danger ? ' danger' : ''}" data-pop="${i}"${it.disabled ? ' disabled' : ''}>${it.icon || ''}<span>${esc(it.label)}</span>${it.hint ? `<kbd class="pop-kbd">${esc(it.hint)}</kbd>` : ''}</button>`).join('');
   pop._items = items;
   pop.classList.add('on');
-  const r = anchor && anchor.getBoundingClientRect ? anchor.getBoundingClientRect() : { left: 20, right: 20, bottom: 60, top: 60 };
-  const w = 260;
+  const w = 260, point = anchor && anchor.x != null && !anchor.getBoundingClientRect;
+  const r = point ? { left: anchor.x, right: anchor.x + w, top: anchor.y, bottom: anchor.y - 6 }
+    : anchor && anchor.getBoundingClientRect ? anchor.getBoundingClientRect() : { left: 20, right: 20, bottom: 60, top: 60 };
   let left = Math.min(r.right - w, window.innerWidth - w - 10); if (left < 10) left = 10;
   pop.style.left = left + 'px';
   pop.style.top = Math.min(r.bottom + 6, window.innerHeight - 60) + 'px';
-  requestAnimationFrame(() => { const h = pop.offsetHeight; if (r.bottom + 6 + h > window.innerHeight) pop.style.top = Math.max(10, r.top - h - 6) + 'px'; });
-  document.getElementById('scrim').classList.add('on');
+  requestAnimationFrame(() => { const h = pop.offsetHeight; if (r.bottom + 6 + h > window.innerHeight) pop.style.top = Math.max(10, (point ? r.top : r.top - 6) - h) + 'px'; });
+  const scrim = document.getElementById('scrim');
+  scrim.classList.toggle('clear', !!point);   // el menú contextual no oscurece la pantalla
+  scrim.classList.add('on');
 }
-function closePop() { const pop = document.getElementById('pop'); pop.classList.remove('on'); pop._items = null; if (!st.modal) document.getElementById('scrim').classList.remove('on'); }
+function closePop() { const pop = document.getElementById('pop'); pop.classList.remove('on'); pop._items = null; if (!st.modal) document.getElementById('scrim').classList.remove('on', 'clear'); }
+/* Tocar el menú no le quita el foco al editor: así Cortar/Copiar/Pegar
+   actúan sobre la selección de ProseMirror. */
+document.getElementById('pop').addEventListener('mousedown', e => e.preventDefault());
 function openModal(html, onOk) {
   const m = document.getElementById('modal');
   m.innerHTML = `<div class="md-card">${html}</div>`;
   m.classList.add('on'); st.modal = { onOk };
-  document.getElementById('scrim').classList.add('on');
+  const scrim = document.getElementById('scrim');
+  scrim.classList.remove('clear'); scrim.classList.add('on');
 }
-function closeModal() { const m = document.getElementById('modal'); m.classList.remove('on'); m.innerHTML = ''; st.modal = null; closePop(); document.getElementById('scrim').classList.remove('on'); }
+function closeModal() { const m = document.getElementById('modal'); m.classList.remove('on'); m.innerHTML = ''; st.modal = null; closePop(); document.getElementById('scrim').classList.remove('on', 'clear'); }
+
+/* ─── arrastrar una nota a una carpeta de la barra lateral ───
+   Las tarjetas de la lista son draggable (escritorio); las filas de la barra
+   lateral que aceptan llevan data-drop: el id de la carpeta, '' para
+   «Notas» (raíz) o 'trash' para «Eliminadas». */
+let _dragNote = null, _dropEl = null;
+function setDropTarget(el) {
+  if (_dropEl === el) return;
+  if (_dropEl) _dropEl.classList.remove('drop-on');
+  _dropEl = el;
+  if (el) el.classList.add('drop-on');
+}
+document.addEventListener('dragstart', e => {
+  const card = e.target.closest && e.target.closest('.card[data-note]:not(.trash)');
+  if (!card) return;
+  _dragNote = card.dataset.note;
+  e.dataTransfer.effectAllowed = 'move';
+  try { e.dataTransfer.setData('text/plain', (noteById(_dragNote) || {}).title || 'Nota'); } catch (_) { }
+  card.classList.add('dragging');
+  document.body.classList.add('dragging-note');
+});
+document.addEventListener('dragend', () => {
+  document.querySelectorAll('.card.dragging').forEach(c => c.classList.remove('dragging'));
+  document.body.classList.remove('dragging-note');
+  setDropTarget(null); _dragNote = null;
+});
+document.addEventListener('dragover', e => {
+  if (!_dragNote) return;
+  const row = e.target.closest && e.target.closest('[data-drop]');
+  const n = noteById(_dragNote);
+  /* la carpeta donde ya está no se resalta: soltar ahí no haría nada */
+  const ok = row && n && (row.dataset.drop === 'trash' || row.dataset.drop !== (n.folder || ''));
+  setDropTarget(ok ? row : null);
+  if (!ok) return;
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+});
+document.addEventListener('drop', e => {
+  if (!_dragNote) return;
+  const row = e.target.closest && e.target.closest('[data-drop]');
+  if (!row) return;
+  e.preventDefault();
+  const id = _dragNote, dest = row.dataset.drop;
+  setDropTarget(null);
+  if (dest === 'trash') trashNote(id); else moveNoteTo(id, dest);
+});
+
+/* ─── clic derecho: el menú de la app en vez del de Chrome ───
+   Cada zona tiene sus acciones (tarjeta, carpeta, papelera, editor…). Con
+   Shift + clic derecho sale el menú del navegador (inspeccionar, revisar la
+   ortografía, etc.). En los campos de texto se deja el nativo (pegar,
+   autocompletar). En el teléfono, una pulsación larga en el EDITOR selecciona
+   texto: ahí tampoco se intercepta. */
+let _lastPointer = 'mouse';
+document.addEventListener('pointerdown', e => { _lastPointer = e.pointerType || 'mouse'; }, true);
+document.addEventListener('contextmenu', e => {
+  if (e.shiftKey) return;
+  const t = e.target;
+  if (!t.closest || t.closest('input, textarea, select, #login')) return;
+  if (_lastPointer === 'touch' && t.closest('.ed')) return;
+  e.preventDefault();
+  if (t.closest('#pop') || t.closest('#modal')) return;
+  if (document.getElementById('pop').classList.contains('on')) closePop();
+  if (st.modal) return;
+  const items = contextItems(t);
+  if (items && items.length) openPop({ x: e.clientX, y: e.clientY }, items);
+});
+function contextItems(t) {
+  const card = t.closest('.card[data-note]');
+  if (card) {
+    const id = card.dataset.note;
+    if (card.classList.contains('trash')) {
+      const n = noteById(id); if (!n) return null;
+      return [
+        { label: 'Restaurar', icon: I.restore(), run: () => { n.trashed_at = ''; queueSave('notes', n); paint(); toast('Nota restaurada'); } },
+        { sep: true },
+        { label: 'Borrar para siempre', icon: I.trash(), danger: true, run: () => confirmModal('¿Borrar para siempre?', 'No se puede deshacer.', () => { notes.splice(notes.indexOf(n), 1); removeRec('notes', n.id); paint(); }) },
+      ];
+    }
+    return noteMenuItems(id, true);
+  }
+  const drop = t.closest('[data-drop], .fcard[data-arg]');
+  if (drop) {
+    const key = drop.dataset.drop != null ? drop.dataset.drop : drop.dataset.arg;
+    if (key === 'trash') return trashed().length ? [{ label: 'Vaciar la papelera', icon: I.trash(), danger: true, run: () => emptyTrash() }] : null;
+    const items = [{ label: 'Nueva nota aquí', icon: I.plus(), run: () => { goList(key === 'all' ? null : key); startNew(); } }];
+    if (key && key !== 'all') { const more = folderMenuItems(key); if (more) items.push({ sep: true }, ...more); }
+    else items.push({ label: 'Nueva carpeta', icon: I.folder(), run: () => newFolder('') });
+    return items;
+  }
+  if (t.closest('.ed') && ED.view) return editorContextItems(t);
+  if (st.view === 'note') return noteMenuItems(st.noteId);
+  if (st.view === 'trash') return trashed().length ? [{ label: 'Vaciar la papelera', icon: I.trash(), danger: true, run: () => emptyTrash() }] : null;
+  if (st.view === 'list' || st.view === 'folders') {
+    const here = st.folder || '';
+    return [
+      { label: 'Nueva nota', icon: I.plus(), run: startNew },
+      { label: here ? 'Nueva subcarpeta' : 'Nueva carpeta', icon: I.folder(), run: () => newFolder(here) },
+    ];
+  }
+  return null;
+}
+/* Dentro del editor: portapapeles, formato y las acciones de la nota. */
+function editorContextItems(t) {
+  const es = editorState() || { marks: {} };
+  const sel = ED.view.state.selection, hasSel = !sel.empty;
+  const mod = /Mac|iPhone|iPad/.test(navigator.platform || '') ? '⌘' : 'Ctrl+';
+  const items = [];
+  const a = t.closest('a[href]');
+  if (a) items.push(
+    { label: 'Abrir enlace', icon: I.open(), run: () => window.open(a.href, '_blank', 'noopener') },
+    { label: 'Copiar enlace', icon: I.link(), run: () => navigator.clipboard && navigator.clipboard.writeText(a.href).then(() => toast('Enlace copiado')) },
+    { sep: true });
+  const img = t.closest('.ed-img img');
+  if (img && img.src) items.push({ label: 'Abrir imagen', icon: I.open(), run: () => window.open(img.src, '_blank', 'noopener') }, { sep: true });
+  items.push(
+    { label: 'Cortar', icon: I.cut(), hint: mod + 'X', disabled: !hasSel, run: () => { editorFocus(); document.execCommand('cut'); } },
+    { label: 'Copiar', icon: I.copy(), hint: mod + 'C', disabled: !hasSel, run: () => { editorFocus(); document.execCommand('copy'); } },
+    { label: 'Pegar', icon: I.paste(), hint: mod + 'V', run: () => editorPasteFromClipboard() },
+    { label: 'Seleccionar todo', icon: I.selectAll(), hint: mod + 'A', run: () => editorCmd('selectAll') },
+    { sep: true },
+  );
+  if (hasSel) items.push(
+    { label: es.marks.strong ? 'Quitar negrita' : 'Negrita', icon: I.bold(), hint: mod + 'B', run: () => { editorCmd('bold'); paintToolbar(); } },
+    { label: es.marks.em ? 'Quitar cursiva' : 'Cursiva', icon: I.italic(), hint: mod + 'I', run: () => { editorCmd('italic'); paintToolbar(); } },
+    { label: es.marks.strike ? 'Quitar tachado' : 'Tachado', icon: I.strike(), run: () => { editorCmd('strike'); paintToolbar(); } },
+    { sep: true },
+  );
+  return items.concat(noteMenuItems(st.noteId) || []);
+}
+async function editorPasteFromClipboard() {
+  if (!navigator.clipboard) { toast('Usa Ctrl+V para pegar'); return; }
+  try {
+    if (navigator.clipboard.read) {
+      const its = await navigator.clipboard.read();
+      for (const it of its) {
+        const imgType = it.types.find(x => /^image\//.test(x));
+        if (imgType) { const b = await it.getType(imgType); insertImage(new File([b], 'pegada.' + imgType.split('/')[1], { type: imgType })); return; }
+      }
+      for (const it of its) {
+        if (it.types.includes('text/html')) { const h = await (await it.getType('text/html')).text(); editorPaste({ html: h }); return; }
+        if (it.types.includes('text/plain')) { const s = await (await it.getType('text/plain')).text(); editorPaste({ text: s }); return; }
+      }
+      return;
+    }
+    editorPaste({ text: await navigator.clipboard.readText() });
+  } catch (_) { toast('El navegador no dejó leer el portapapeles: usa Ctrl+V'); }
+}
+function emptyTrash() {
+  confirmModal('¿Vaciar la papelera?', `Se borran ${trashed().length} notas para siempre.`, () => { trashed().forEach(n => { notes.splice(notes.indexOf(n), 1); removeRec('notes', n.id); }); paint(); });
+}
 /* El onOk corre ANTES de cerrar (lee el campo del modal); si abrió otro
    modal, ese se queda. */
 function modalOk() {
@@ -296,15 +530,19 @@ document.addEventListener('click', e => {
     case 'toggleTag': st.tag = st.tag === arg ? null : arg; st.remote = null; paint(); break;
     case 'clearRemote': st.remote = null; paint(); break;
     case 'newFolder': newFolder(''); break;
-    case 'newFolderFromMove': closeModal(); promptFolder('Nueva carpeta', '', name => { const f = { id: genId(), name, parent: '', order: String(Date.now()), icon: '' }; folders.push(f); createRec('folders', f); const n = noteById(st.noteId); if (n) { n.folder = f.id; queueSave('notes', n); } paint(); }); break;
+    case 'newFolderFromMove': { const mid = st.moveId || st.noteId; closeModal(); promptFolder('Nueva carpeta', '', name => { const f = { id: genId(), name, parent: '', order: String(Date.now()), icon: '' }; folders.push(f); createRec('folders', f); const n = noteById(mid); if (n) { n.folder = f.id; queueSave('notes', n); } paint(); }); break; }
     case 'folderMenu': e.stopPropagation(); folderMenu(arg, el); break;
     case 'moveNote': moveNoteModal(arg); break;
-    case 'moveTo': { const n = noteById(st.noteId); if (n) { n.folder = arg; queueSave('notes', n); } closeModal(); paint(); break; }
+    case 'moveTo': { const mid = st.moveId || st.noteId; closeModal(); moveNoteTo(mid, arg); break; }
     case 'noteMenu': noteMenu(el); break;
-    case 'share': shareNote(); break;
+    case 'share': shareMenu(st.noteId, el); break;
+    case 'shareLink': shareLink(arg); break;
+    case 'shareCopy': copyShareLink(arg); break;
+    case 'shareStop': stopSharing(arg); break;
+    case 'shareSend': { const n = noteById(arg); if (n && n.share && navigator.share) navigator.share({ title: n.title || 'Nota', url: shareUrl(n.share) }).catch(() => {}); break; }
     case 'restore': { const n = noteById(arg); if (n) { n.trashed_at = ''; queueSave('notes', n); paint(); toast('Nota restaurada'); } break; }
     case 'deleteForever': { const n = noteById(arg); if (n) confirmModal('¿Borrar para siempre?', 'No se puede deshacer.', () => { notes.splice(notes.indexOf(n), 1); removeRec('notes', n.id); paint(); }); break; }
-    case 'emptyTrash': confirmModal('¿Vaciar la papelera?', `Se borran ${trashed().length} notas para siempre.`, () => { trashed().forEach(n => { notes.splice(notes.indexOf(n), 1); removeRec('notes', n.id); }); paint(); }); break;
+    case 'emptyTrash': emptyTrash(); break;
     case 'histPreview': st.histPreview = st.histPreview === arg ? null : arg; paint(); break;
     case 'histRestore': histRestore(arg); break;
     case 'ed': if (arg === 'image') pickImage(); else editorCmd(arg); paintToolbar(); break;

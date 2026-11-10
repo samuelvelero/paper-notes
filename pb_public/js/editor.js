@@ -272,11 +272,28 @@ function editorOpen(host, markdown, cbs) {
     handleDOMEvents: {
       focus() { ED.cbs.onFocus && ED.cbs.onFocus(); return false; },
       blur() { ED.cbs.onBlur && ED.cbs.onBlur(); return false; },
+      mousedown(view, ev) { return edClickBelow(view, ev); },
       paste(view, ev) { return edPaste(view, ev); },
       drop(view, ev) { return edDropFiles(view, ev); },
     },
   });
   return ED.view;
+}
+/* Clic en el hueco de debajo del último bloque: si ese bloque no es un
+   párrafo (lista, to-do, cita, código, imagen, separador), no hay dónde
+   poner el cursor para seguir con cuerpo de texto. Se crea el párrafo. */
+function edClickBelow(view, ev) {
+  if (ev.button !== 0 || ev.target !== view.dom) return false;
+  const last = view.dom.lastElementChild;
+  if (!last || ev.clientY <= last.getBoundingClientRect().bottom) return false;
+  const doc = view.state.doc, node = doc.lastChild;
+  if (!node || node.type.name === 'paragraph' || node.type.name === 'heading') return false;
+  const p = view.state.schema.nodes.paragraph.create();
+  const tr = view.state.tr.insert(doc.content.size, p);
+  tr.setSelection(PM.state.TextSelection.create(tr.doc, tr.doc.content.size - 1)).scrollIntoView();
+  view.dispatch(tr); view.focus();
+  ev.preventDefault();
+  return true;
 }
 /* Pegar imágenes del portapapeles → subirlas; texto con sintaxis Markdown →
    interpretarlo (si parece Markdown y no hay HTML). */
@@ -303,6 +320,18 @@ function edDropFiles(view, ev) {
   if (any) ev.preventDefault();
   return any;
 }
+/* Pegar desde el menú contextual (la app leyó el portapapeles): por el mismo
+   camino que Ctrl+V, así el Markdown pegado también se interpreta. */
+function editorPaste({ text, html }) {
+  if (!ED.view) return;
+  const v = ED.view;
+  v.focus();
+  if (!html && text && /(^|\n)\s*(#{1,3}\s|[-*+]\s|\d+[.)]\s|>\s|```)|\*\*|\[[^\]]+\]\(/.test(text)) {
+    const doc = v.state.schema.nodeFromJSON(MDPM.parse(text));
+    v.dispatch(v.state.tr.replaceSelection(new PM.model.Slice(doc.content, 0, 0)).scrollIntoView());
+  } else if (html) v.pasteHTML(html);
+  else if (text) v.pasteText(text);
+}
 function editorMarkdown() { return ED.view ? MDPM.serialize(ED.view.state.doc.toJSON()) : ''; }
 function editorSet(markdown) {
   if (!ED.view) return;
@@ -315,7 +344,7 @@ function editorSet(markdown) {
 function editorIsEmpty() { return ED.view ? !ED.view.state.doc.textContent.trim() && !ED.view.state.doc.content.content.some(n => n.type.name === 'image') : true; }
 function editorFocus() { ED.view && ED.view.focus(); }
 function editorBlur() { ED.view && ED.view.dom.blur(); }
-function editorDestroy() { if (ED.view) { ED.view.destroy(); ED.view = null; } }
+function editorDestroy() { if (ED.view) { const v = ED.view; ED.view = null; v.destroy(); } }
 function editorHasFocus() { return !!(ED.view && ED.view.hasFocus()); }
 
 /* Comandos de la barra. Devuelve true si hizo algo. */
@@ -371,6 +400,7 @@ function editorCmd(name, arg) {
       const tr = s.tr.setSelection(PM.state.Selection.atEnd(s.doc));
       v.dispatch(tr); v.focus(); return true;
     }
+    case 'selectAll': return run(PM.commands.selectAll);
     case 'focusStart': {
       const tr = s.tr.setSelection(PM.state.Selection.atStart(s.doc));
       v.dispatch(tr); v.focus(); return true;
